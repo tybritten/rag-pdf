@@ -1,0 +1,6 @@
+unstructured
+loguru
+semantic-router[processing]
+semantic-router[local]
+tiktoken
+
