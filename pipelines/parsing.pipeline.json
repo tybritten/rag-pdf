@@ -1,0 +1,42 @@
+{
+  "pipeline": {
+    "name": "parse-docs",
+    "project": {
+      "name": "pdf-rag"
+    }
+  },
+  "transform": {
+    "image": "vmtyler/pdk:parsing-v0.0.7a",
+    "cmd": [
+      "/bin/bash",
+      "-C"
+    ],
+    "stdin": [
+      "python3 parsing.py --input /pfs/documents --output /pfs/out "
+    ],
+    "env": {
+      "PYTHON_UNBUFFERED": "1"
+    }
+  },
+  "input": {
+    "pfs": {
+      "repo": "documents",
+      "glob": "/*"
+    }
+  },
+  "resourceRequests": {
+    "cpu": 4,
+    "memory": "16Gi",
+    "disk": "10Gi"
+  },
+  "resourceLimits": {
+    "gpu": {
+      "type": "nvidia.com/gpu",
+      "number": 1
+    }
+  },
+  "parallelismSpec": {
+    "constant": 4
+  },
+  "autoscaling": true
+}

@@ -1,0 +1,36 @@
+{
+    "pipeline": {
+      "name": "embed-docs",
+      "project": {
+        "name": "pdf-rag"
+      }
+    },
+    "transform": {
+      "image": "vmtyler/pdk:embed-v0.0.7",
+      "cmd": [
+        "/bin/bash",
+        "-C"
+      ],
+      "stdin": [
+        "python3 embed.py --data-path /pfs/data --emb-model-path /data/SFR-Embedding-Mistral/ --path-to-db /pfs/out/"
+      ],
+      "env": {
+        "PYTHON_UNBUFFERED": "1"
+      }
+    },
+    "input": {
+      "pfs": {
+        "repo": "chunk-docs",
+        "name": "data",
+        "glob": "/"
+      }
+    },
+    "resourceLimits": {
+      "gpu": {
+        "type": "nvidia.com/gpu",
+        "number": 1
+      }
+    },
+    "autoscaling": false,
+    "podPatch": "[{\"op\": \"add\",\"path\": \"/volumes/-\",\"value\": {\"name\": \"data-store\",\"hostpath\": {\"path\": \"/nvmefs1/tyler.britten\",\"type\": \"Directory\"}}}, {\"op\": \"add\",\"path\": \"/containers/0/volumeMounts/-\",\"value\": {\"mountPath\": \"/data\",\"name\": \"data-store\"}}]"
+  }
