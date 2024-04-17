@@ -7,6 +7,7 @@ from semantic_router.encoders import HuggingFaceEncoder
 from unstructured.chunking.title import chunk_by_title
 from unstructured.staging.base import convert_to_dict, dict_to_elements
 from rolling_window import UnstructuredSemanticSplitter
+from rag_schema import Document, DataElement, DataType, Metadata
 
 parser = argparse.ArgumentParser(description="File Parser")
 parser.add_argument("--input", type=str, help="input directory")
