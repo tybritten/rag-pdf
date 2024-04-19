@@ -145,14 +145,14 @@ sympy==1.12
 tenacity==8.2.3
 threadpoolctl==3.4.0
 tiktoken==0.6.0
-tokenizers==0.15.2
+tokenizers==0.19.1
 toml==0.10.2
 tomli==2.0.1
 toolz==0.12.1
 torch==2.2.1
 tornado==6.4
 tqdm==4.66.2
-transformers==4.37.2
+transformers==4.40.0
 typer==0.10.0
 typing-inspect==0.9.0
 typing_extensions==4.10.0
@@ -166,3 +166,4 @@ websockets==12.0
 wrapt==1.16.0
 yarl==1.9.4
 zipp==3.18.1
+autoawq

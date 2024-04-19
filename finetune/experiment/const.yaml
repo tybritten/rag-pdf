@@ -1,17 +1,17 @@
-name: bge_finetune
+name: arctic-embed-fine-tune
 workspace: Tyler
 project: doc_embeds
 description: "Docs"
 hyperparameters:
   global_batch_size: 5
   eval_steps: 25
-  model_id: "BAAI/bge-large-en-v1.5"
-  epochs: 20
+  model_id: "Snowflake/snowflake-arctic-embed-l"
+  epochs: 5
 resources:
   slots_per_trial: 1
   resource_pool: A100
 environment:
-  image: vmtyler/doc_embeds:0.1
+  image: vmtyler/doc_embeds:0.2
 checkpoint_storage:
   save_trial_best: 1
 searcher:

@@ -32,6 +32,12 @@ parser.add_argument(
     default="TinyLlama/TinyLlama-1.1B-Chat-v0.4",
     help="path to chat model",
 )
+parser.add_argument(
+    "--sample-size",
+    default=250,
+    type=int,
+    help="Dataset sample size",
+)
 parser.add_argument("--output", default="./output", help="output directory")
 args = parser.parse_args()
 
@@ -57,7 +63,7 @@ for i in range(len(chunks["ids"])):
     nodes.append(TextNode(id=chunks["ids"][i], text=chunks["documents"][i], metadata=chunks["metadatas"][i]))
 
 print(f"Loaded {len(nodes)} nodes")
-sample = 500 if len(nodes) > 500 else len(nodes)
+sample = int(args.sample_size) if len(nodes) > 500 else len(nodes)
 sub = int(sample / 2)
 subset = random.sample(nodes, sample)
 
