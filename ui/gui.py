@@ -12,7 +12,7 @@ from llama_index.core import VectorStoreIndex, get_response_synthesizer
 from llama_index.core.retrievers import VectorIndexRetriever
 from llama_index.core.query_engine import RetrieverQueryEngine
 from llama_index.core.postprocessor import SimilarityPostprocessor
-
+from transformers import AutoTokenizer
 
 parser = argparse.ArgumentParser()
 parser.add_argument(
@@ -31,7 +31,7 @@ parser.add_argument(
 )
 parser.add_argument(
     "--top-k",
-    default=6,
+    default=5,
     type=int,
     help="top k results",
 )
@@ -40,6 +40,12 @@ parser.add_argument(
     default=0.7,
     type=float,
     help="cutoff for similarity score",
+)
+parser.add_argument(
+    "--response-mode",
+    default="tree_summarize",
+    type=str,
+    help="LLamaIndex Response Mode",
 )
 args = parser.parse_args()
 
@@ -88,11 +94,23 @@ st.title("Retrieval Augmented Generation (RAG) Demo Q&A")
 @st.cache_resource
 def load_chat_model(cuda_device="cuda:0"):
     st.write(f"Chat Model:  {args.path_to_chat_model}")
+
+    tokenizer = AutoTokenizer.from_pretrained(args.path_to_chat_model)
+
+    stopping_ids = [
+        tokenizer.eos_token_id,
+        tokenizer.convert_tokens_to_ids("<|eot_id|>"),
+    ]
     llm = HuggingFaceLLM(
-        context_window=8192,
-        max_new_tokens=512,
         model_name=args.path_to_chat_model,
         tokenizer_name=args.path_to_chat_model,
+        generate_kwargs={
+            "do_sample": True,
+            "temperature": 0.6,
+            "top_p": 0.9,
+            "max_length": 512
+        },
+        stopping_ids=stopping_ids,
     )
     Settings.llm = llm
     return llm
@@ -119,7 +137,7 @@ def create_query_engine():
         similarity_top_k=args.top_k,
     )
     # configure response synthesizer
-    response_synthesizer = get_response_synthesizer(streaming=True)
+    response_synthesizer = get_response_synthesizer(response_mode=args.response_mode, streaming=True)
     query_engine = RetrieverQueryEngine(
         retriever=retriever,
         response_synthesizer=response_synthesizer,
@@ -170,5 +188,3 @@ with torch.inference_mode():
                 if not title.startswith("http"):
                     st.markdown(out_link)
                 st.divider()
-
-            
