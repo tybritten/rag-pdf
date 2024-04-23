@@ -6,13 +6,13 @@
       }
     },
     "transform": {
-      "image": "vmtyler/pdk:gui-v0.0.9",
+      "image": "vmtyler/pdk:gui-v0.0.20d",
       "cmd": [
         "/bin/bash",
         "-C"
       ],
       "stdin": [
-        "streamlit run gui.py -- --path-to-db /pfs/data --path-to-chat-model /data/Mistral-7B-Instruct-v0.1  --emb-model-path /data/SFR-Embedding-Mistral/ "
+        "streamlit run gui.py -- --path-to-db /pfs/data --path-to-chat-model /data/Mistral-7B-Instruct-v0.1  --emb-model-path /data/snowflake-arctic-embed-l/ "
       ],
       "env": {
         "PYTHON_UNBUFFERED": "1"

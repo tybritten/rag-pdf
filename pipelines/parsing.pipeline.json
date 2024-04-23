@@ -6,7 +6,7 @@
     }
   },
   "transform": {
-    "image": "vmtyler/pdk:parsing-v0.0.7a",
+    "image": "vmtyler/pdk:parsing-v0.0.8",
     "cmd": [
       "/bin/bash",
       "-C"

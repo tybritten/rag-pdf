@@ -1,9 +1,7 @@
-from typing import List
 import chromadb
 import argparse
 from llama_index.vector_stores.chroma import ChromaVectorStore
 from llama_index.embeddings.huggingface import HuggingFaceEmbedding
-from llama_index.core import VectorStoreIndex
 from llama_index.llms.huggingface import HuggingFaceLLM
 import torch
 from llama_index.core import Settings
