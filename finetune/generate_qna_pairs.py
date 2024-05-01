@@ -32,15 +32,29 @@ parser.add_argument(
     default="TinyLlama/TinyLlama-1.1B-Chat-v0.4",
     help="path to chat model",
 )
-parser.add_argument(
-    "--sample-size",
-    default=250,
-    type=int,
-    help="Dataset sample size",
-)
 parser.add_argument("--output", default="./output", help="output directory")
+
+parser.add_argument('--train_ratio', type=float, default=0.8,
+                        help='Fraction of nodes to use for training set (between 0 and 1). Validation set will be 1-train_ratio. ')
 args = parser.parse_args()
 
+def split_nodes(nodes, train_fraction=0.8):
+    # Ensure there are enough nodes to form a meaningful split
+    assert len(nodes) >= 2, "Node list must contain at least two elements."
+    assert 0 < train_fraction < 1, "Train fraction must be between 0 and 1."
+
+    LEN = len(nodes)
+    train_size = int(LEN * train_fraction)
+    validation_size = LEN - train_size  # Ensures all elements are included
+    print("Training set size: ",train_size)
+    print("Validation set size: ",validation_size)
+    # Shuffle nodes to randomize the sampling
+    shuffled_nodes = random.sample(nodes, LEN)
+
+    train = shuffled_nodes[:train_size]
+    validation = shuffled_nodes[train_size:]
+
+    return train, validation
 
 
 llm = HuggingFaceLLM(
@@ -62,12 +76,10 @@ nodes = []
 for i in range(len(chunks["ids"])):
     nodes.append(TextNode(id=chunks["ids"][i], text=chunks["documents"][i], metadata=chunks["metadatas"][i]))
 
-print(f"Loaded {len(nodes)} nodes")
-sample = int(args.sample_size) if len(nodes) > 500 else len(nodes)
-sub = int(sample / 2)
-subset = random.sample(nodes, sample)
+print("Number of nodes: ",len(nodes))
 
-test, train = subset[:sub], subset[sub:]
+train, test = split_nodes(nodes, train_fraction=args.train_ratio)  # 80% train, 20% validation
+
 
 train_dataset = generate_qa_embedding_pairs(
     llm=llm, nodes=train
@@ -77,4 +89,5 @@ test_dataset = generate_qa_embedding_pairs(
 )
 
 train_dataset.save_json(f"{args.output}/train_dataset.json")
-test_dataset.save_json(f"{args.output}/val_dataset.json")
+test_dataset.save_json(f"{args.output}/test_dataset.json")
+

@@ -1,6 +1,15 @@
 name: arctic-embed-fine-tune
 workspace: Tyler
 project: doc_embeds
+bind_mounts:
+  - container_path: /nvmefs1/
+    host_path: /nvmefs1/
+    propagation: rprivate
+    read_only: false
+  - container_path: /determined_shared_fs
+    host_path: /nvmefs1/determined/checkpoints
+    propagation: rprivate
+    read_only: false
 description: "Docs"
 hyperparameters:
   global_batch_size: 5
@@ -28,6 +37,6 @@ data:
     host: pachd-peer.pachyderm
     port: '30653'
     previous_commit: null
-    project: pdf-rag
+    project: pdf-rag-andrew
     repo: generate-qna
     token: null

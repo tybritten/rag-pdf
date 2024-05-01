@@ -2,11 +2,11 @@
   "pipeline": {
     "name": "parse-docs",
     "project": {
-      "name": "pdf-rag"
+      "name": "rag-demo-hpe"
     }
   },
   "transform": {
-    "image": "vmtyler/pdk:parsing-v0.0.8",
+    "image": "mendeza/pdk:parsing-v0.0.1",
     "cmd": [
       "/bin/bash",
       "-C"
@@ -21,9 +21,8 @@
   "input": {
     "pfs": {
       "repo": "documents",
-      "glob": "/*"
-    }
-  },
+      "glob": "/"
+    }},
   "resourceRequests": {
     "cpu": 4,
     "memory": "16Gi",
@@ -35,8 +34,5 @@
       "number": 1
     }
   },
-  "parallelismSpec": {
-    "constant": 4
-  },
-  "autoscaling": true
+  "autoscaling": false
 }
