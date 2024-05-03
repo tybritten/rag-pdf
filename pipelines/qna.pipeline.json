@@ -6,7 +6,7 @@
       }
     },
     "transform": {
-      "image": "mendeza/pdk:genqna-v0.0.3",
+      "image": "mendeza/pdk:genqna-v0.0.4",
       "cmd": [
         "/bin/bash",
         "-C"

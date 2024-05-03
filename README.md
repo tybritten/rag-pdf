@@ -14,7 +14,7 @@ To replicate this demo, you will need:
  - A functioning Kubernetes cluster with load balancers for external facing services configured
      - cluster having shared mounted folder `/nvmefs1/tyler.britten`
  - Pachyderm/HPE MLDM 2.9.2 installed on the cluster and fully functional
- - At least 1x NVIDIA A100 80GB GPUs
+ - At least 1x NVIDIA T4 80GB GPUs
  - Determined.AI/HPE MLDE environment for finetuning models (not included in the base code here)
  - 
 
@@ -26,8 +26,7 @@ To replicate this demo, you will need:
 [ToDo]
 
 ## Implementation Overview
-The below chart gives a logical overview of the application flow of Mercedes Me Chat. </br>
-<img src="./documentation_images/implementation_overview.png" alt="Implementation Overview"/>
+
 
 - Step 1: Connect to deployed MLDM application
 - Step 2: Create MLDM project named `rag-demo-hpe`
