@@ -29,25 +29,37 @@ def main(data_path, embed_model, db):
             with open(input_file, "r") as f:
                 input_text = json.load(f)
                 for doc in input_text:
-                    if doc["type"] == "Table":
-                        text = doc["metadata"]["text_as_html"]
-                    else:
-                        text = doc["text"]
-                    if "url" in doc["metadata"]:
-                        source = doc["metadata"]["url"]
-                    elif "filename" in doc["metadata"]:
-                        source = doc["metadata"]["filename"]
-                    else:
-                        source = "Unknown"
-                    metadata = {
-                            "Source": source,
-                            "Page Number": doc["metadata"]["page_number"],
-                            "Commit": os.environ.get("PACH_JOB_ID","")} 
-                    docs.append(TextNode(text=text, metadata=metadata))
+                    #(4.26.2024) Andrew: Dealing with issue when parsing txt or xml, doc can be a string
+                    if isinstance(doc, dict):
+                        if doc["type"] == "Table":
+                            text = doc["metadata"]["text_as_html"]
+                        else:
+                            text = doc["text"]
+                        if "url" in doc["metadata"]:
+                            source = doc["metadata"]["url"]
+                        elif "filename" in doc["metadata"]:
+                            source = doc["metadata"]["filename"]
+                        else:
+                            source = "Unknown"
+                        try:
+                            metadata = {
+                                    "Source": source,
+                                    "Page Number": doc["metadata"]["page_number"],
+                                    "Commit": os.environ.get("PACH_JOB_ID","")} 
+                            docs.append(TextNode(text=text, metadata=metadata))
+                        except Exception as e:
+                            #(4.26.2024) Andrew: Dealing with issue when parsing txt or xml, no Page Number is created
+                            metadata = {
+                                    "Source": source,
+                                    "Page Number": 1,
+                                    "Commit": os.environ.get("PACH_JOB_ID","")} 
+                            docs.append(TextNode(text=text, metadata=metadata))
+                            
+                            # print(e)
     print("Number of chunks: ", len(docs))
 
     for node in docs:
-        index.insert_nodes(node)
+        index.insert_nodes([node])
     index.storage_context.persist(persist_dir=data_path)
 
 

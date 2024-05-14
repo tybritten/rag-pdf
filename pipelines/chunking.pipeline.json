@@ -2,7 +2,7 @@
     "pipeline": {
       "name": "chunk-docs",
       "project": {
-        "name": "pdf-rag"
+        "name": "rag-demo-hpe"
       }
     },
     "transform": {

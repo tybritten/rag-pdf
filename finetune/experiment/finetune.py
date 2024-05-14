@@ -1,3 +1,6 @@
+import nltk
+nltk.download('stopwords', download_dir='/nvmefs1/andrew.mendez/nltk_cache')
+
 from llama_index.core.evaluation import EmbeddingQAFinetuneDataset
 import determined as det
 from sentence_transformers import InputExample, SentenceTransformer, losses, evaluation

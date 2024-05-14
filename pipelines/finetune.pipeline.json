@@ -1,13 +1,16 @@
 {
     "pipeline": {
-      "name": "finetune-embedding"
+      "name": "finetune-embedding",
+      "project": {
+        "name": "rag-demo-hpe"
+      }
     },
     "description": "Detects changed files into a repository and triggers a retraining on that dataset",
     "input": {
       "pfs": {
         "name": "data",
-        "repo": "dogs-and-cats-data",
-        "branch": "master",
+        "repo": "generate-qna",
+        "project": "pdf-rag-andrew",
         "glob": "/",
         "empty_files": true
       }
@@ -17,7 +20,7 @@
         "/bin/sh"
       ],
       "stdin": [
-        "python train.py --git-url https://git@github.com:/tybritten/rag-pdf.git --git-ref main --sub-dir finetune/experiment --config const.yaml --repo generate-qna --model rag-embedding --project pdf-rag"
+        "python train.py --git-url https://git@github.com:/interactivetech/rag-pdf.git --git-ref main --sub-dir finetune/experiment --config const.yaml --repo generate-qna --model rag-embedding --project pdf-rag-andrew"
       ],
       "image": "pachyderm/pdk:train-v0.0.6",
       "secrets": [
@@ -43,7 +46,7 @@
         }
       ]
     },
-    "autoscaling": true,
-    "pod_patch": "[{\"op\": \"add\",\"path\": \"/volumes/-\",\"value\": {\"name\": \"det-checkpoints\",\"hostpath\": {\"path\": \"/mnt/efs/shared_fs/determined\",\"type\": \"Directory\"}}}, {\"op\": \"add\",\"path\": \"/containers/0/volumeMounts/-\",\"value\": {\"mountPath\": \"/determined_shared_fs\",\"name\": \"det-checkpoints\"}}]"
+    "autoscaling": false,
+    "podPatch": "[{\"op\": \"add\",\"path\": \"/volumes/-\",\"value\": {\"name\": \"data-store\",\"hostpath\": {\"path\": \"/nvmefs1/tyler.britten\",\"type\": \"Directory\"}}}, {\"op\": \"add\",\"path\": \"/containers/0/volumeMounts/-\",\"value\": {\"mountPath\": \"/data\",\"name\": \"data-store\"}},{\"op\": \"add\",\"path\": \"/volumes/-\",\"value\": {\"name\": \"det-checkpoints\",\"hostpath\": {\"path\": \"/nvmefs1/determined/checkpoints\",\"type\": \"Directory\"}}}, {\"op\": \"add\",\"path\": \"/containers/0/volumeMounts/-\",\"value\": {\"mountPath\": \"/checkpoints\",\"name\": \"det-checkpoints\"}}]"
   }
   

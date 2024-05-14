@@ -1,0 +1,6 @@
+.ipynb_checkpoints/
+embedding/.ipynb_checkpoints/
+pipelines/.ipynb_checkpoints/
+embedding/.ipynb_checkpoints/
+*/.ipynb_checkpoints/
+__pycache__

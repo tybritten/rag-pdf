@@ -36,7 +36,7 @@ def parse(input_file, output, strategy, chunking_strategy):
         else:
             source = "Unknown"
         el["metadata"]["source"] = source
-        page_number = el["metadata"].get("page_number", None)
+        page_number = el["metadata"].get("page_number", 1)
         url = el["metadata"].get("url", None)
         text_as_html = el["metadata"].get("text_as_html", None)
         output_list.append(DataElement(
