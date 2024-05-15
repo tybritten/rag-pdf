@@ -2,7 +2,7 @@
     "pipeline": {
       "name": "finetune-embedding",
       "project": {
-        "name": "rag-demo-hpe"
+        "name": "rfp-demo-hpe"
       }
     },
     "description": "Detects changed files into a repository and triggers a retraining on that dataset",
@@ -10,7 +10,7 @@
       "pfs": {
         "name": "data",
         "repo": "generate-qna",
-        "project": "pdf-rag-andrew",
+        "project": "rfp-demo-hpe",
         "glob": "/",
         "empty_files": true
       }

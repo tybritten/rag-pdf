@@ -2,7 +2,7 @@
     "pipeline": {
       "name": "embed-docs",
       "project": {
-        "name": "rag-demo-hpe"
+        "name": "rfp-demo-hpe"
       }
     },
     "transform": {

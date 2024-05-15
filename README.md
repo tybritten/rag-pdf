@@ -1,13 +1,12 @@
 img src="https://raw.githubusercontent.com/hpe-design/logos/master/Requirements/color-logo.png" alt="HPE Logo" height="100"/>
 
-# RAG demo (Chat with HPE Press Release version)
+# RFP RAG demo (Chat with HPE Press Release version)
 
 <b>Author:</b> Tyler Britten, Andrew Mendez </br>
 <b>Date:</b> 05/01/2024</br>
 <b>Revision:</b> 0.1</br>
 
-This demonstration was built to showcase Retrieval Augmented Generation (RAG) on HPE press release documents.
-It shows how RAG can be used to assist customers with keeping up with recent HPE news articles.
+This demonstration was built to showcase Retrieval Augmented Generation (RAG) on internal word documents. These word documents contain Request for Proposal (RFP). A request for proposal (RFP) is a business document that announces a project, describes it, and solicits bids from qualified contractors to complete it. It shows how RAG can be used to assist business development teams to ask questions from previous RFPs written.
 
 To replicate this demo, you will need:
 
@@ -16,7 +15,7 @@ To replicate this demo, you will need:
  - Pachyderm/HPE MLDM 2.9.2 installed on the cluster and fully functional
  - At least 1x NVIDIA T4 80GB GPUs
  - Determined.AI/HPE MLDE environment for finetuning models (not included in the base code here)
- - 
+ - downloaded word documents (in .docx format) that 
 
 <b>NOTE:</b> You might be able to replicate this demo with other GPUs (for example L40s) as well, but you need to consider the memory footprint of other GPUs and adjust accordingly.
 
@@ -29,7 +28,7 @@ To replicate this demo, you will need:
 
 
 - Step 1: Connect to deployed MLDM application
-- Step 2: Create MLDM project named `rag-demo-hpe`
+- Step 2: Create MLDM project named `rfp-demo-hpe`
 - Step 3: Set new project as current context
 - Step 4: Create repo `documents` to hold xml documents
 - Step 5: Upload xml documents
@@ -51,31 +50,33 @@ To replicate this demo, you will need:
 
 # Steps to run the demo
 
+## Prep Step:
+
+We wont be providing word documents to protect the intellectual property of HPE's RFPs. You can download word documents of internal HPE documents here [link](link). When you are done downloading, make sure to place them in a folder called `data/`
+
 ## Step 1: Connect to deployed MLDM application
 
 `pachctl connect pachd-peer.pachyderm.svc.cluster.local:30653`
 
-## Step 2: Create MLDM project named `rag-demo-hpe`
+## Step 2: Create MLDM project named `rfp-demo-hpe`
 
-`pachctl create project rag-demo-hpe`
+`pachctl create project rfp-demo-hpe`
 
 ## Step 3: Set new project as current context
 
-`pachctl config update context --project rag-demo-hpe`
+`pachctl config update context --project rfp-demo-hpe`
 
 ### Pipeline will be available at the url:
 
-`http://mldm-pachyderm.us.rdlabs.hpecorp.net/lineage/pdf-rag-andrew`
+`http://mldm-pachyderm.us.rdlabs.hpecorp.net/lineage/rfp-demo-hpe`
 
 ## Step 4: Create repo `documents` to hold xml documents
 
 `pachctl create repo documents`
 
-## Step 5: Upload xml documents
+## Step 5: Upload single xml document
 
-`pachctl put file documents@master: -f data/antonio-neri.xml`
-`pachctl put file documents@master: -f data/aruba_wifi_7_press.xml`
-`pachctl put file documents@master: -f data/e2e_ai_platform_press_release.xml`
+`pachctl put file -r documents@master -f data/`
 
 ## Step 6: Pipeline step to parse documents
 
@@ -110,34 +111,18 @@ Note: There is an issue with the Houston cluster where there are not enough IP a
 
 `ssh andrew@mlds-mgmt.us.rdlabs.hpecorp.net -L 8080:localhost:8080`
 
-### run command to port forward GUI to local computer: 
+### Find IP of deployed GUI
 
-`kubectl port-forward -n pachyderm svc/pdf-rag-andrew-gui-v1-user 8080:80`
-
-### Open web browser and go to url `localhost:8080` 
+look at pachyderm GUI pipeline UI element, and you should see an IP
+```
+Service IP
+10.182.1.153:80
+```
+### Open web browser and go to url `10.182.1.153:80` 
 
 ####  Ask in the UI:
 
-`Who is Antonio Neri?`
-
-also ask a question about a new announcement about HPE Aruba Networking:
-
-`What did HPE Aruba Networking Introduce?`
-
-#### Now ask, the app won't answer it correctly: 
-
-`Who is Neil MacDonald?`
-
-## Step 11: Add new documents to repo `documents` to improve RAG App
-
-We will show the key value proposition with a data driven pipeline, add more documents, and the RAG app will automatically be updated. 
-
-### In the terminal, add new document:
-
-`pachctl put file documents@master: -f data/neil-macdonald.xml`
-
-When pipeline is done, refresh webpage and ask:
-`Who is Neil MacDonald?`
+`What is HPE's solution offering for AI?`
 
 
 # Optional Steps

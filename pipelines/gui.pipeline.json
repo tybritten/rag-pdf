@@ -2,7 +2,7 @@
     "pipeline": {
       "name": "gui",
       "project": {
-        "name": "rag-demo-hpe"
+        "name": "rfp-demo-hpe"
       }
     },
     "transform": {
@@ -12,7 +12,7 @@
         "-C"
       ],
       "stdin": [
-        "streamlit run gui.py -- --path-to-db /pfs/data --path-to-chat-model /data/Mistral-7B-Instruct-v0.1  --emb-model-path /data/bge-large-en-v1.5/"
+        "streamlit run gui.py -- --path-to-db /pfs/data --path-to-chat-model /data/Meta-Llama-3-8B-Instruct  --emb-model-path /data/bge-large-en-v1.5/"
       ],
       "env": {
         "PYTHON_UNBUFFERED": "1"
