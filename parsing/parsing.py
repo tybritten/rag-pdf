@@ -14,18 +14,10 @@ parser.add_argument("--input", type=str, help="input directory")
 parser.add_argument("--output", default="./output", help="output directory")
 parser.add_argument("--strategy", default="auto", help="parsing strategy")
 parser.add_argument("--chunking_strategy", default=None, help="chunking strategy")
+parser.add_argument("--folder_tags", default=False, help="folder tags")
 
 
-def parse(input_file, output, strategy, chunking_strategy):
-    logger.info(f"Processing {input_file}")
-    elements = partition(
-        filename=input_file,
-        skip_infer_table_types=[],
-        pdf_infer_table_structure=True,
-        strategy=strategy,
-        chunking_strategy=chunking_strategy
-    )
-    output_path = os.path.join(output, Path(input_file).stem + ".json")
+def elements_to_rag_schema(elements: list, tag=None):
     output_list = Document()
     for element in elements:
         el = element.to_dict()
@@ -47,28 +39,38 @@ def parse(input_file, output, strategy, chunking_strategy):
                 source=el["metadata"]["source"],
                 page_number=page_number,
                 url=url,
-                text_as_html=text_as_html
+                text_as_html=text_as_html,
+                tag=tag
             )
         ))
-        output_list.append(element.to_dict())
+    return output_list
+
+
+def parse(input_file, output, strategy, chunking_strategy, tag=None):
+    logger.info(f"Processing {input_file}")
+    elements = partition(
+        filename=input_file,
+        skip_infer_table_types=[],
+        strategy=strategy,
+        chunking_strategy=chunking_strategy
+    )
+    output_list = elements_to_rag_schema(elements, tag=tag)
+    output_path = os.path.join(output, Path(input_file).stem + ".json")
     with open(output_path, "w") as f:
         logger.info(f"Writing output to {output_path}")
         json.dump(output_list, f, indent=4)
 
 
-def parse_url(url, output, strategy, chunking_strategy):
+def parse_url(url, output, strategy, chunking_strategy, tag=None):
     logger.info(f"Processing {url}")
     elements = partition(
         url=url,
         skip_infer_table_types=[],
-        pdf_infer_table_structure=True,
         strategy=strategy,
         chunking_strategy=chunking_strategy
     )
+    output_list = elements_to_rag_schema(elements, tag=tag)
     output_path = os.path.join(output, Path(url).stem + ".json")
-    output_list = []
-    for element in elements:
-        output_list.append(element.to_dict())
     with open(output_path, "w") as f:
         logger.info(f"Writing output to {output_path}")
         json.dump(output_list, f, indent=4)
@@ -84,9 +86,21 @@ def main(args):
                     lines = [line.rstrip() for line in file]
                 for url in lines:
                     logger.info(f"Processing {url}")
-                    parse_url(url, args.output, args.strategy, args.chunking_strategy)
+                    if args.folder_tags:
+                        tag = dirpath.replace(args.input, '')
+                        if tag.endswith('/'):
+                            tag = tag[:-1]
+                        if tag.startswith('/'):
+                            tag = tag[1:]
+                    parse_url(url, args.output, args.strategy, args.chunking_strategy, tag)
             else:
-                parse(input_file, args.output, args.strategy, args.chunking_strategy)
+                if args.folder_tags:
+                    tag = dirpath.replace(args.input, '')
+                    if tag.endswith('/'):
+                        tag = tag[:-1]
+                    if tag.startswith('/'):
+                        tag = tag[1:]
+                parse(input_file, args.output, args.strategy, args.chunking_strategy, tag)
             
 
 def init():
@@ -97,6 +111,8 @@ if __name__ == '__main__':
     args = parser.parse_args()
     init()
     logger.info('Starting processing')
+    if args.folder_tags:
+        logger.info('Using folder names as tags')
     main(args)
 
     

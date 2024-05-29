@@ -6,9 +6,15 @@ body,
     font-family: 'Roboto', sans-serif;
     color: #465462;
 }
-p, ol, ul, dl {
+ol, ul, dl {
     margin:0px 0px 1rem;
     padding: 0px;
     font-size: 1rem;
     font-weight: 900;
+}
+p.user {
+    display: inline;
+    padding-left: 2.0%;
+    padding-right: 3%;
+    font-family: "Arial", Arial, sans-serif;
 }

@@ -57,6 +57,7 @@ class Metadata(dict):
     page_number: Optional[int] = None
     url: Optional[str] = None
     text_as_html: Optional[str] = None
+    tag: Optional[str] = None
 
 
 class DataElement(dict):
