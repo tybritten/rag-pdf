@@ -2,17 +2,17 @@
   "pipeline": {
     "name": "parse-docs",
     "project": {
-      "name": "rag-demo-hpe"
+      "name": "rag-demo"
     }
   },
   "transform": {
-    "image": "mendeza/pdk:parsing-v0.0.1",
+    "image": "vmtyler/pdk:parsing-v0.1.0a",
     "cmd": [
       "/bin/bash",
       "-C"
     ],
     "stdin": [
-      "python3 parsing.py --input /pfs/documents --output /pfs/out "
+      "python3 parsing.py --input /pfs/documents --output /pfs/out --chunking_strategy by_title --folder_tags True"
     ],
     "env": {
       "PYTHON_UNBUFFERED": "1"
@@ -22,7 +22,8 @@
     "pfs": {
       "repo": "documents",
       "glob": "/*"
-    }},
+    }
+  },
   "resourceRequests": {
     "cpu": 4,
     "memory": "16Gi",
@@ -33,6 +34,5 @@
       "type": "nvidia.com/gpu",
       "number": 1
     }
-  },
-  "autoscaling": false
+  }
 }
