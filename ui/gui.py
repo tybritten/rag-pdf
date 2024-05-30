@@ -10,8 +10,8 @@ from llama_index.core import VectorStoreIndex, get_response_synthesizer
 from llama_index.core.retrievers import VectorIndexRetriever
 from llama_index.core.query_engine import RetrieverQueryEngine
 from llama_index.core.postprocessor import SimilarityPostprocessor
-from transformers import AutoTokenizer, BitsAndBytesConfig
-
+from transformers import AutoTokenizer
+import os
 from llama_index.core.vector_stores.types import (
     MetadataFilter,
     MetadataFilters,
@@ -44,7 +44,11 @@ parser.add_argument(
     type=float,
     help="cutoff for similarity score",
 )
-
+parser.add_argument(
+    "--streaming",
+    default=True,
+    help="stream responses",
+)
 args = parser.parse_args()
 
 
@@ -249,13 +253,21 @@ if prompt := input_container.chat_input("Say something..."):
         Using
         the context information, answer the question: {prompt}
         If you don't know the answer to a question, please don't share false information. 
-        Limit your response to 500 tokens.Just generate the answer without explanations.
+        Limit your response to 500 tokens.Just generate the answer without a lot of explanations.
         <|eot_id|><|start_header_id|>assistant<|end_header_id|>
         """)
-    #output_response = client.generate(text_qa_template_str_llama3)
-    output_response = llm.complete(text_qa_template_str_llama3)
-    with chat_container.chat_message("assistant", avatar="./static/logo.jpeg"):
-        response = st.write(output_response.text)
+    if args.streaming:
+        output_response = llm.stream_complete(text_qa_template_str_llama3)
+        with chat_container.chat_message("assistant", avatar="./static/logo.jpeg"):
+            response = st.write_stream(output_response)
+    else:
+        output_response = llm.complete(text_qa_template_str_llama3)
+        with chat_container.chat_message("assistant", avatar="./static/logo.jpeg"):
+            response = st.write(output_response.text)
+
+    project = os.environ["PPS_PROJECT_NAME"]
+    doc_repo = os.environ["DOCUMENT_REPO"]
+    proxy_url = os.environ["PACH_PROXY_EXTERNAL_URL_BASE"]
 
     with col2:
         references = output.source_nodes
@@ -264,10 +276,14 @@ if prompt := input_container.chat_input("Say something..."):
             page = references[i].node.metadata["Page Number"]
             text = references[i].node.text
             commit = references[i].node.metadata["Commit"]
+            doctag = references[i].node.metadata["Tag"]
             newtext = text.encode('unicode_escape').decode('unicode_escape')
             out_title = f"**Source:** {title}  \n **Page:** {page}  \n **Similarity Score:** {round((references[i].score * 100),3)}% \n"
             out_text = f"**Text:**  \n {newtext}  \n"
-            out_link = f"[Link to file in Commit {commit}](http://mldm-pachyderm.us.rdlabs.hpecorp.net/proxyForward/pfs/pdf-rag/documents/{commit}/{title}#page={page})\n"
+            if doctag:
+                out_link = f'[Link to file in Commit {commit}]({proxy_url}/proxyForward/pfs/{project}/{doc_repo}/{commit}/{doctag}/{title}#page={page})\n'
+            else:
+                out_link = f'[Link to file in Commit {commit}]({proxy_url}/proxyForward/pfs/{project}/{doc_repo}/{commit}/{title}#page={page})\n'
             col2.markdown(out_title)
             col2.write(out_text, unsafe_allow_html=True)
             if not title.startswith("http"):

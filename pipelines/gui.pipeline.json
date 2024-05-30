@@ -15,7 +15,9 @@
       "streamlit run gui.py -- --path-to-db /pfs/data --path-to-chat-model /data/Meta-Llama-3-70B-Instruct  --emb-model-path /data/bge-large-en-v1.5/ --cutoff 0.6"
     ],
     "env": {
-      "PYTHON_UNBUFFERED": "1"
+      "PYTHON_UNBUFFERED": "1",
+      "PACH_PROXY_EXTERNAL_URL_BASE": "http://192.168.11.100",
+      "DOCUMENT_REPO": "documents"
     }
   },
   "input": {
