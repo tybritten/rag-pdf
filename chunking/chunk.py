@@ -8,6 +8,12 @@ from unstructured.chunking.title import chunk_by_title
 from unstructured.staging.base import convert_to_dict, dict_to_elements
 from rolling_window import UnstructuredSemanticSplitter
 from rag_schema import Document, DataElement, DataType, Metadata
+from typing import List, Optional, Iterable, Any
+from unstructured.documents.elements import (
+    TYPE_TO_TEXT_ELEMENT_MAP,
+    Element,
+    ElementMetadata,
+)
 
 parser = argparse.ArgumentParser(description="File Parser")
 parser.add_argument("--input", type=str, help="input directory")
@@ -21,6 +27,23 @@ parser.add_argument("--rolling_min_split", type=int, default=50, help="min split
 parser.add_argument("--rolling_max_split", type=int, default=100, help="max split tokens rolling_window")
 
 
+def elements_from_rag_dicts(element_dicts: Iterable[dict[str, Any]]) -> list[Element]:
+    """Convert a list of rag-schema-dicts to a list of elements."""
+    elements: list[Element] = []
+
+    for item in element_dicts:
+        element_id: str = item.get("id", None)
+        metadata = (
+            ElementMetadata()
+            if item.get("metadata") is None
+            else ElementMetadata.from_dict(item["metadata"])
+        )
+        if item.get("data_type") in TYPE_TO_TEXT_ELEMENT_MAP:
+            ElementCls = TYPE_TO_TEXT_ELEMENT_MAP[item["data_type"]]
+            elements.append(ElementCls(text=item["content"], element_id=element_id, metadata=metadata))
+
+    return elements
+
 def chunk_docs_unstruct(args, elements):
     chunking_settings = {
         "combine_text_under_n_chars": args.combine_text_under_n_chars,
@@ -28,7 +51,11 @@ def chunk_docs_unstruct(args, elements):
         "new_after_n_chars": args.new_after_n_chars,
     }
     chunked_raw = chunk_by_title(elements=elements, **chunking_settings)
+    el = elements[0].to_dict()
     results = convert_to_dict(chunked_raw)
+    if "tag" in el["metadata"]:
+        for result in results:
+            result["metadata"]["tag"] = el["metadata"]
     return results
 
 
@@ -52,7 +79,10 @@ def main(args):
             logger.info(f"Processing {input_file}.....")
             with open(input_file) as file:
                 contents = json.load(file)
-                elements_raw = dict_to_elements(contents)
+                if contents[0].get("id") is None:
+                    elements_raw = dict_to_elements(contents)
+                else:
+                    elements_raw = elements_from_rag_dicts(contents)
             if args.chunker == "rolling_window":
                 logger.info(f"Processing {input_file} with rolling window")
                 elements = chunk_with_rolling_window(args, elements_raw)
@@ -64,6 +94,7 @@ def main(args):
             with open(output_path, "w") as f:
                 logger.info(f"Writing output to {output_path}")
                 json.dump(elements, f, indent=4)
+
 
 
 if __name__ == '__main__':
