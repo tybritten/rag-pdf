@@ -53,6 +53,7 @@ class DataType(str, Enum):
 
 class Metadata(dict):
     """Metadata fields that pertain to the data source."""
+
     source: str
     page_number: Optional[int] = None
     url: Optional[str] = None
@@ -62,6 +63,7 @@ class Metadata(dict):
 
 class DataElement(dict):
     """A data element is a piece of text, image, link, or table."""
+
     """ The content field can contain text or Base64 encoded image data."""
     id: uuid4
     data_type: DataType
@@ -70,21 +72,22 @@ class DataElement(dict):
     embeddings: Optional[Tensor] = None
 
 
-
 class Document(List[DataElement]):
     """A document is a list of data elements."""
+
     def from_dict(self, data: dict):
         for element in data:
-            self.append(DataElement(
-                id=element["element_id"],
-                data_type=DataType(element["type"]),
-                content=element["text"],
-                metadata=Metadata(
-                    source=element["metadata"]["source"],
-                    page_number=element["metadata"]["page_number"],
-                    url=element["metadata"]["url"],
-                    text_as_html=element["metadata"]["text_as_html"]
+            self.append(
+                DataElement(
+                    id=element["element_id"],
+                    data_type=DataType(element["type"]),
+                    content=element["text"],
+                    metadata=Metadata(
+                        source=element["metadata"]["source"],
+                        page_number=element["metadata"]["page_number"],
+                        url=element["metadata"]["url"],
+                        text_as_html=element["metadata"]["text_as_html"],
+                    ),
                 )
-            ))
+            )
         return self
-

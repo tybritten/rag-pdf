@@ -20,7 +20,9 @@ def main(data_path, embed_model, db):
     storage_context = StorageContext.from_defaults(vector_store=vector_store)
 
     docs = []
-    index = VectorStoreIndex(docs, storage_context=storage_context, embed_model=embed_model)
+    index = VectorStoreIndex(
+        docs, storage_context=storage_context, embed_model=embed_model
+    )
     for dirpath, dirs, files in os.walk(data_path):
         for file in files:
             input_file = os.path.join(dirpath, file)
@@ -28,7 +30,7 @@ def main(data_path, embed_model, db):
             with open(input_file, "r") as f:
                 input_text = json.load(f)
                 for doc in input_text:
-                    #(4.26.2024) Andrew: Dealing with issue when parsing txt or xml, doc can be a string
+                    # (4.26.2024) Andrew: Dealing with issue when parsing txt or xml, doc can be a string
                     if isinstance(doc, dict):
                         if doc["data_type"] == "Table":
                             text = doc["metadata"]["text_as_html"]
@@ -42,12 +44,13 @@ def main(data_path, embed_model, db):
                         if "tag" in doc["metadata"]:
                             tag = doc["metadata"]["tag"]
                         else:
-                            tags = ""
+                            tag = ""
                         metadata = {
-                                "Source": source,
-                                "Page Number": page_number,
-                                "Commit": os.environ.get("PACH_JOB_ID", ""),
-                                "Tag": tag}
+                            "Source": source,
+                            "Page Number": page_number,
+                            "Commit": os.environ.get("PACH_JOB_ID", ""),
+                            "Tag": tag,
+                        }
                         docs.append(TextNode(text=text, metadata=metadata))
 
     print("Number of chunks: ", len(docs))

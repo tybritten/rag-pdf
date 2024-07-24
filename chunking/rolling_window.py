@@ -128,14 +128,19 @@ class UnstructuredSemanticSplitter:
         chunks_with_title = []
 
         def _append_chunks(
-            *, title: str, content: str, chunk_index: int, metadata: dict, element_type:str = "WindowElement"
+            *,
+            title: str,
+            content: str,
+            chunk_index: int,
+            metadata: dict,
+            element_type: str = "WindowElement"
         ):
             chunks_with_title.append(
                 {
                     "title": title,
-                    "type": element_type,
-                    "text": content,
-                    "chunk_index": chunk_index,
+                    "data_type": element_type,
+                    "content": content,
+                    "id": chunk_index,
                     "metadata": metadata,
                 }
             )
@@ -208,8 +213,6 @@ class UnstructuredSemanticSplitter:
 
     def __call__(self, elements: list[dict[str, Any]]) -> list[dict[str, Any]]:
         return self.split_grouped_elements(elements, self.splitter)
-
-
 
 
 class TableParser(HTMLParser):

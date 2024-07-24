@@ -19,12 +19,22 @@ parser = argparse.ArgumentParser(description="File Parser")
 parser.add_argument("--input", type=str, help="input directory")
 parser.add_argument("--output", default="./output", help="output directory")
 parser.add_argument("--chunker", default="unstructered", help="chunking engine")
-parser.add_argument("--combine_text_under_n_chars", default=50, help="unstructured setting")
+parser.add_argument(
+    "--combine_text_under_n_chars", default=50, help="unstructured setting"
+)
 parser.add_argument("--max_characters", default=750, help="unstructured setting")
 parser.add_argument("--new_after_n_chars", default=500, help="unstructured setting")
-parser.add_argument("--embedding_model_path", default="BAAI/bge-base-en-v1.5", help="embedding model for rolling_window")
-parser.add_argument("--rolling_min_split", type=int, default=50, help="min split tokens rolling_window")
-parser.add_argument("--rolling_max_split", type=int, default=100, help="max split tokens rolling_window")
+parser.add_argument(
+    "--embedding_model_path",
+    default="BAAI/bge-base-en-v1.5",
+    help="embedding model for rolling_window",
+)
+parser.add_argument(
+    "--rolling_min_split", type=int, default=50, help="min split tokens rolling_window"
+)
+parser.add_argument(
+    "--rolling_max_split", type=int, default=100, help="max split tokens rolling_window"
+)
 
 
 def elements_from_rag_dicts(element_dicts: Iterable[dict[str, Any]]) -> list[Element]:
@@ -40,9 +50,14 @@ def elements_from_rag_dicts(element_dicts: Iterable[dict[str, Any]]) -> list[Ele
         )
         if item.get("data_type") in TYPE_TO_TEXT_ELEMENT_MAP:
             ElementCls = TYPE_TO_TEXT_ELEMENT_MAP[item["data_type"]]
-            elements.append(ElementCls(text=item["content"], element_id=element_id, metadata=metadata))
+            elements.append(
+                ElementCls(
+                    text=item["content"], element_id=element_id, metadata=metadata
+                )
+            )
 
     return elements
+
 
 def chunk_docs_unstruct(args, elements):
     chunking_settings = {
@@ -65,7 +80,7 @@ def chunk_with_rolling_window(args, elements):
         encoder=encoder,
         window_size=1,  # Compares each element with the previous one
         min_split_tokens=args.rolling_min_split,
-        max_split_tokens=args.rolling_max_split
+        max_split_tokens=args.rolling_max_split,
     )
     elements_dict = convert_to_dict(elements)
     results = splitter(elements_dict)
@@ -96,8 +111,7 @@ def main(args):
                 json.dump(elements, f, indent=4)
 
 
-
-if __name__ == '__main__':
+if __name__ == "__main__":
     args = parser.parse_args()
-    logger.info('Starting processing')
+    logger.info("Starting processing")
     main(args)

@@ -14,7 +14,12 @@ parser.add_argument("--input", type=str, help="input directory")
 parser.add_argument("--output", default="./output", help="output directory")
 parser.add_argument("--strategy", default="auto", help="parsing strategy")
 parser.add_argument("--chunking_strategy", default=None, help="chunking strategy")
-parser.add_argument("--folder_tags", default=False, help="folder tags")
+parser.add_argument(
+    "--folder_tags",
+    default=False,
+    action=argparse.BooleanOptionalAction,
+    help="folder tags",
+)
 
 
 def elements_to_rag_schema(elements: list, tag=None):
@@ -31,18 +36,20 @@ def elements_to_rag_schema(elements: list, tag=None):
         page_number = el["metadata"].get("page_number", 1)
         url = el["metadata"].get("url", None)
         text_as_html = el["metadata"].get("text_as_html", None)
-        output_list.append(DataElement(
-            id=el["element_id"],
-            data_type=DataType(el["type"]),
-            content=el["text"],
-            metadata=Metadata(
-                source=el["metadata"]["source"],
-                page_number=page_number,
-                url=url,
-                text_as_html=text_as_html,
-                tag=tag
+        output_list.append(
+            DataElement(
+                id=el["element_id"],
+                data_type=DataType(el["type"]),
+                content=el["text"],
+                metadata=Metadata(
+                    source=el["metadata"]["source"],
+                    page_number=page_number,
+                    url=url,
+                    text_as_html=text_as_html,
+                    tag=tag,
+                ),
             )
-        ))
+        )
     return output_list
 
 
@@ -52,7 +59,7 @@ def parse(input_file, output, strategy, chunking_strategy, tag=None):
         filename=input_file,
         skip_infer_table_types=[],
         strategy=strategy,
-        chunking_strategy=chunking_strategy
+        chunking_strategy=chunking_strategy,
     )
     output_list = elements_to_rag_schema(elements, tag=tag)
     output_path = os.path.join(output, Path(input_file).stem + ".json")
@@ -67,7 +74,7 @@ def parse_url(url, output, strategy, chunking_strategy, tag=None):
         url=url,
         skip_infer_table_types=[],
         strategy=strategy,
-        chunking_strategy=chunking_strategy
+        chunking_strategy=chunking_strategy,
     )
     output_list = elements_to_rag_schema(elements, tag=tag)
     output_path = os.path.join(output, Path(url).stem + ".json")
@@ -87,32 +94,36 @@ def main(args):
                 for url in lines:
                     logger.info(f"Processing {url}")
                     if args.folder_tags:
-                        tag = dirpath.replace(args.input, '')
-                        if tag.endswith('/'):
+                        tag = dirpath.replace(args.input, "")
+                        if tag.endswith("/"):
                             tag = tag[:-1]
-                        if tag.startswith('/'):
+                        if tag.startswith("/"):
                             tag = tag[1:]
-                    parse_url(url, args.output, args.strategy, args.chunking_strategy, tag)
+                    parse_url(
+                        url, args.output, args.strategy, args.chunking_strategy, tag
+                    )
             else:
                 if args.folder_tags:
-                    tag = dirpath.replace(args.input, '')
-                    if tag.endswith('/'):
+                    tag = dirpath.replace(args.input, "")
+                    if tag.endswith("/"):
                         tag = tag[:-1]
-                    if tag.startswith('/'):
+                    if tag.startswith("/"):
                         tag = tag[1:]
-                parse(input_file, args.output, args.strategy, args.chunking_strategy, tag)
-            
+                    if "/" in tag:
+                        tag = tag.split("/")[0]
+                parse(
+                    input_file, args.output, args.strategy, args.chunking_strategy, tag
+                )
+
 
 def init():
     logger.info(f"GPU Available: {torch.cuda.is_available()}")
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     args = parser.parse_args()
     init()
-    logger.info('Starting processing')
+    logger.info("Starting processing")
     if args.folder_tags:
-        logger.info('Using folder names as tags')
+        logger.info("Using folder names as tags")
     main(args)
-
-    
