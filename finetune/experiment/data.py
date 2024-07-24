@@ -8,12 +8,10 @@ from pachyderm_sdk.api.pfs import File, FileType
 # ======================================================================================================================
 
 
-
 def safe_open_wb(path):
-    ''' Open "path" for writing, creating any parent directories as needed.
-    '''
+    """Open "path" for writing, creating any parent directories as needed."""
     os.makedirs(os.path.dirname(path), exist_ok=True)
-    return open(path, 'wb')
+    return open(path, "wb")
 
 
 def download_pach_repo(
@@ -36,8 +34,9 @@ def download_pach_repo(
     )
     files = []
     if previous_commit is not None:
-        for diff in client.pfs.diff_file(new_file=File.from_uri(f"{project}/{repo}@{branch}"),
-            old_file=File.from_uri(f"{project}/{repo}@{previous_commit}")
+        for diff in client.pfs.diff_file(
+            new_file=File.from_uri(f"{project}/{repo}@{branch}"),
+            old_file=File.from_uri(f"{project}/{repo}@{previous_commit}"),
         ):
             src_path = diff.new_file.file.path
             des_path = os.path.join(root, src_path[1:])
@@ -47,7 +46,9 @@ def download_pach_repo(
                 if src_path != "":
                     files.append((src_path, des_path))
     else:
-        for file_info in client.pfs.walk_file(file=File.from_uri(f"{project}/{repo}@{branch}")):
+        for file_info in client.pfs.walk_file(
+            file=File.from_uri(f"{project}/{repo}@{branch}")
+        ):
             src_path = file_info.file.path
             des_path = os.path.join(root, src_path[1:])
             print(f"Got src='{src_path}', des='{des_path}'")
@@ -57,7 +58,9 @@ def download_pach_repo(
                     files.append((src_path, des_path))
 
     for src_path, des_path in files:
-        src_file = client.pfs.pfs_file(file=File.from_uri(f"{project}/{repo}@{branch}:{src_path}"))
+        src_file = client.pfs.pfs_file(
+            file=File.from_uri(f"{project}/{repo}@{branch}:{src_path}")
+        )
         print(f"Downloading {src_path} to {des_path}")
 
         with safe_open_wb(des_path) as dest_file:

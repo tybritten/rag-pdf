@@ -4,3 +4,4 @@ pipelines/.ipynb_checkpoints/
 embedding/.ipynb_checkpoints/
 */.ipynb_checkpoints/
 __pycache__
+db/*

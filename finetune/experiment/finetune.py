@@ -1,5 +1,6 @@
 import nltk
-nltk.download('stopwords', download_dir='/nvmefs1/andrew.mendez/nltk_cache')
+
+nltk.download("stopwords", download_dir="/nvmefs1/andrew.mendez/nltk_cache")
 
 from llama_index.core.evaluation import EmbeddingQAFinetuneDataset
 import determined as det
@@ -9,6 +10,7 @@ import logging
 import torch
 from data import download_pach_repo
 import os
+
 
 def download_data(data_config, data_dir):
 
@@ -25,6 +27,7 @@ def download_data(data_config, data_dir):
     print(f"Data dir set to : {data_dir}")
     return [des for src, des in files]
 
+
 def main(core_context):
     info = det.get_cluster_info()
     data_config = info.user_data
@@ -34,7 +37,7 @@ def main(core_context):
         os.makedirs(data_dir, exist_ok=True)
         download_data(data_config, data_dir)
     ckpt_dir = "/tmp/checkpoint"
-    
+
     dataset = EmbeddingQAFinetuneDataset.from_json(f"{data_dir}/train_dataset.json")
     training_data = []
     for query_id, query in dataset.queries.items():
@@ -52,11 +55,11 @@ def main(core_context):
     val_dataset = EmbeddingQAFinetuneDataset.from_json(f"{data_dir}/test_dataset.json")
 
     model = SentenceTransformer(hparams.get("model_id"))
-    
+
     train_loss = losses.CosineSimilarityLoss(model)
-    
+
     max_steps = len(dataloader) * hparams["epochs"]
-    
+
     evaluator = evaluation.InformationRetrievalEvaluator(
         val_dataset.queries, val_dataset.corpus, val_dataset.relevant_docs
     )
@@ -104,4 +107,3 @@ if __name__ == "__main__":
     logging.basicConfig(level=logging.INFO, format=det.LOG_FORMAT)
     with det.core.init() as core_context:
         main(core_context)
-
