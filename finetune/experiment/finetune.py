@@ -2,14 +2,17 @@ import nltk
 
 nltk.download("stopwords", download_dir="/nvmefs1/andrew.mendez/nltk_cache")
 
-from llama_index.core.evaluation import EmbeddingQAFinetuneDataset
-import determined as det
-from sentence_transformers import InputExample, SentenceTransformer, losses, evaluation
-from torch.utils.data import DataLoader
 import logging
-import torch
-from data import download_pach_repo
 import os
+
+import determined as det
+import torch
+from llama_index.core.evaluation import EmbeddingQAFinetuneDataset
+from sentence_transformers import (InputExample, SentenceTransformer,
+                                   evaluation, losses)
+from torch.utils.data import DataLoader
+
+from data import download_pach_repo
 
 
 def download_data(data_config, data_dir):

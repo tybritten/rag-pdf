@@ -1,17 +1,17 @@
+import argparse
 import json
 import os
 import random
-import argparse
-from llama_index.core import SimpleDirectoryReader, VectorStoreIndex, Settings
-from llama_index.core.node_parser import SentenceSplitter
-from llama_index.core.schema import MetadataMode, TextNode
-from llama_index.finetuning import generate_qa_embedding_pairs
-from llama_index.core.evaluation import EmbeddingQAFinetuneDataset
-from llama_index.vector_stores.chroma import ChromaVectorStore
-from llama_index.embeddings.huggingface import HuggingFaceEmbedding
-from llama_index.llms.huggingface import HuggingFaceLLM
 
 import chromadb
+from llama_index.core import Settings, SimpleDirectoryReader, VectorStoreIndex
+from llama_index.core.evaluation import EmbeddingQAFinetuneDataset
+from llama_index.core.node_parser import SentenceSplitter
+from llama_index.core.schema import MetadataMode, TextNode
+from llama_index.embeddings.huggingface import HuggingFaceEmbedding
+from llama_index.finetuning import generate_qa_embedding_pairs
+from llama_index.llms.huggingface import HuggingFaceLLM
+from llama_index.vector_stores.chroma import ChromaVectorStore
 
 parser = argparse.ArgumentParser()
 parser.add_argument(
