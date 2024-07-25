@@ -24,7 +24,7 @@ args:
   default: "NodePort"
 - name: external_port
   description: The port for the K8s Service
-  type: int
+  type: string
   default: "32080"
 */
 
@@ -34,7 +34,7 @@ local embed_cmd(embed_model) =
 local chat_cmd(chat_model, embed_model) =
     "streamlit run gui.py -- --path-to-db /pfs/data --path-to-chat-model " + chat_model + " --emb-model-path " + embed_model + " --cutoff 0.6";
 
-function(input_repo, embed_model="http://embed.mlis.svc.cluster.local/v1", chat_model="http://llama3.mlis.svc.cluster.local/v1", mldm_base_url, service_type="NodePort", external_port=32080)
+function(input_repo, embed_model="http://embed.mlis.svc.cluster.local/v1", chat_model="http://llama3.mlis.svc.cluster.local/v1", mldm_base_url, service_type="NodePort", external_port="32080")
 [
 {
   "pipeline": {
@@ -138,7 +138,7 @@ function(input_repo, embed_model="http://embed.mlis.svc.cluster.local/v1", chat_
   "autoscaling": false,
   "service": {
     "type": service_type,
-    "externalPort": external_port,
+    "externalPort": std.parseInt(external_port),
     "internalPort": 8501
   },
 }
