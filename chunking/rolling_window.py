@@ -1,13 +1,12 @@
 import re
+from html.parser import HTMLParser
 from typing import Any
 
 import tiktoken
 from colorama import Fore, Style
+from loguru import logger
 from semantic_router.encoders import BaseEncoder
 from semantic_router.splitters import RollingWindowSplitter
-
-from loguru import logger
-from html.parser import HTMLParser
 
 
 def _tiktoken_length(text: str):

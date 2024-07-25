@@ -1,9 +1,10 @@
-from typing import List, Optional
-from enum import Enum
-from torch import Tensor
-from uuid import uuid4
-from dataclasses import dataclass
 import json
+from dataclasses import dataclass
+from enum import Enum
+from typing import List, Optional
+from uuid import uuid4
+
+from torch import Tensor
 
 
 class DataType(str, Enum):

@@ -1,23 +1,21 @@
-import chromadb
 import argparse
-from llama_index.vector_stores.chroma import ChromaVectorStore
+import os
+
+import chromadb
+import streamlit as st
+from llama_index.core import (Settings, VectorStoreIndex,
+                              get_response_synthesizer)
+from llama_index.core.postprocessor import SimilarityPostprocessor
+from llama_index.core.query_engine import RetrieverQueryEngine
+from llama_index.core.retrievers import VectorIndexRetriever
+from llama_index.core.vector_stores.types import (MetadataFilter,
+                                                  MetadataFilters)
 from llama_index.embeddings.huggingface import HuggingFaceEmbedding
+from llama_index.embeddings.openai import OpenAIEmbedding
 from llama_index.llms.huggingface import HuggingFaceLLM
 from llama_index.llms.openllm import OpenLLMAPI
-from llama_index.core import Settings
-import streamlit as st
-from llama_index.core import VectorStoreIndex, get_response_synthesizer
-from llama_index.core.retrievers import VectorIndexRetriever
-from llama_index.core.query_engine import RetrieverQueryEngine
-from llama_index.core.postprocessor import SimilarityPostprocessor
+from llama_index.vector_stores.chroma import ChromaVectorStore
 from transformers import AutoTokenizer
-import os
-from llama_index.core.vector_stores.types import (
-    MetadataFilter,
-    MetadataFilters,
-)
-
-from llama_index.embeddings.openai import OpenAIEmbedding
 
 parser = argparse.ArgumentParser()
 parser.add_argument("--path-to-db", type=str, default="db", help="path to chroma db")

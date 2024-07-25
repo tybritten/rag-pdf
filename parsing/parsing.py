@@ -1,13 +1,12 @@
-from unstructured.partition.auto import partition
-import os
 import argparse
 import json
+import os
 from pathlib import Path
-from loguru import logger
+
 import torch
-
-
-from rag_schema import Document, DataElement, DataType, Metadata
+from loguru import logger
+from rag_schema import DataElement, DataType, Document, Metadata
+from unstructured.partition.auto import partition
 
 parser = argparse.ArgumentParser(description="File Parser")
 parser.add_argument("--input", type=str, help="input directory")

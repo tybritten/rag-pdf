@@ -1,19 +1,17 @@
-import os
 import argparse
 import json
+import os
 from pathlib import Path
+from typing import Any, Iterable, List, Optional
+
 from loguru import logger
+from rag_schema import DataElement, DataType, Document, Metadata
+from rolling_window import UnstructuredSemanticSplitter
 from semantic_router.encoders import HuggingFaceEncoder
 from unstructured.chunking.title import chunk_by_title
+from unstructured.documents.elements import (TYPE_TO_TEXT_ELEMENT_MAP, Element,
+                                             ElementMetadata)
 from unstructured.staging.base import convert_to_dict, dict_to_elements
-from rolling_window import UnstructuredSemanticSplitter
-from rag_schema import Document, DataElement, DataType, Metadata
-from typing import List, Optional, Iterable, Any
-from unstructured.documents.elements import (
-    TYPE_TO_TEXT_ELEMENT_MAP,
-    Element,
-    ElementMetadata,
-)
 
 parser = argparse.ArgumentParser(description="File Parser")
 parser.add_argument("--input", type=str, help="input directory")

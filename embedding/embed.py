@@ -1,16 +1,16 @@
-import chromadb
-
 import argparse
-import os
 import json
+import os
 import shutil
-from llama_index.embeddings.huggingface import HuggingFaceEmbedding
-from llama_index.core.schema import TextNode
-from llama_index.vector_stores.chroma import ChromaVectorStore
-from llama_index.core import VectorStoreIndex
-from llama_index.core.storage import StorageContext
-import torch
 
+import chromadb
+import torch
+from llama_index.core import VectorStoreIndex
+from llama_index.core.schema import TextNode
+from llama_index.core.storage import StorageContext
+from llama_index.embeddings.huggingface import HuggingFaceEmbedding
+from llama_index.embeddings.openai import OpenAIEmbedding
+from llama_index.vector_stores.chroma import ChromaVectorStore
 
 def main(data_path, embed_model, db):
     collection = db.get_or_create_collection(
@@ -87,8 +87,12 @@ if __name__ == "__main__":
     print(f"creating/loading db at {args.path_to_db}...")
     db = chromadb.PersistentClient(path=args.path_to_db, settings=settings)
     print("Done!")
-    print("Loading {}...".format(args.emb_model_path))
-    embed_model = HuggingFaceEmbedding(args.emb_model_path)
+    if args.emb_model_path.startswith("http"):
+        print(f"Using Embedding API model endpoint: {args.emb_model_path}")
+        embed_model = OpenAIEmbedding(api_base=args.emb_model_path, api_key="dummy", embed_batch_size=1)
+    else:
+        print("Loading {}...".format(args.emb_model_path))
+        embed_model = HuggingFaceEmbedding(args.emb_model_path)
     main(args.data_path, embed_model, db)
     if args.output:
         shutil.copytree(args.path_to_db)
