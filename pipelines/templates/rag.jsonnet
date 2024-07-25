@@ -74,9 +74,6 @@ function(input_repo, embed_model="http://embed.mlis.svc.cluster.local/v1", chat_
 {
   "pipeline": {
     "name": "embed-docs",
-    "project": {
-      "name": "rag-demo"
-    }
   },
   "transform": {
     "image": "vmtyler/pdk:embed-v0.1",
@@ -100,9 +97,6 @@ function(input_repo, embed_model="http://embed.mlis.svc.cluster.local/v1", chat_
 {
   "pipeline": {
     "name": "gui",
-    "project": {
-      "name": "rag-demo"
-    }
   },
   "transform": {
     "image": "vmtyler/pdk:gui-v0.1.6c",
