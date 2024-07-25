@@ -35,7 +35,7 @@ local chat_cmd(chat_model, embed_model) =
     "streamlit run gui.py -- --path-to-db /pfs/data --path-to-chat-model " + chat_model + " --emb-model-path " + embed_model + " --cutoff 0.6";
 
 function(input_repo, embed_model="http://embed.mlis.svc.cluster.local/v1", chat_model="http://llama3.mlis.svc.cluster.local/v1", mldm_base_url, service_type="NodePort", external_port="32080")
-[
+
 {
   "pipeline": {
     "name": "parse-docs",
@@ -70,7 +70,7 @@ function(input_repo, embed_model="http://embed.mlis.svc.cluster.local/v1", chat_
       "number": 1
     }
   }
-},
+}
 {
   "pipeline": {
     "name": "embed-docs",
@@ -96,7 +96,7 @@ function(input_repo, embed_model="http://embed.mlis.svc.cluster.local/v1", chat_
       "glob": "/"
     }
   }
-},
+}
 {
   "pipeline": {
     "name": "gui",
@@ -142,4 +142,4 @@ function(input_repo, embed_model="http://embed.mlis.svc.cluster.local/v1", chat_
     "internalPort": 8501
   },
 }
-]
+
