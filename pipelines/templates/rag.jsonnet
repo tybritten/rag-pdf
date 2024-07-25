@@ -93,7 +93,7 @@ function(input_repo, embed_model="http://embed.mlis.svc.cluster.local/v1", chat_
       "name": "data",
       "glob": "/"
     }
-  }
+  },
   "autoscaling": true
 }
 {
