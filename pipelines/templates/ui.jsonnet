@@ -59,17 +59,6 @@ function(input_repo, embed_model="http://embed.mlis.svc.cluster.local/v1", chat_
       "glob": "/"
     }
   },
-  "resourceLimits": {
-    "gpu": {
-      "type": "nvidia.com/gpu",
-      "number": 1
-    }
-  },
-  "schedulingSpec": {
-    "nodeSelector": {
-      "nvidia.com/gpu.product": "NVIDIA-A100-PCIE-40GB"
-    }
-  },
   "autoscaling": false,
   "service": {
     "type": service_type,
