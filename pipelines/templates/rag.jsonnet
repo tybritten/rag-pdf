@@ -69,7 +69,8 @@ function(input_repo, embed_model="http://embed.mlis.svc.cluster.local/v1", chat_
       "type": "nvidia.com/gpu",
       "number": 1
     }
-  }
+  },
+  "autoscaling": true,
 }
 {
   "pipeline": {
@@ -93,6 +94,7 @@ function(input_repo, embed_model="http://embed.mlis.svc.cluster.local/v1", chat_
       "glob": "/"
     }
   }
+  "autoscaling": true
 }
 {
   "pipeline": {
