@@ -98,6 +98,8 @@ def main(args):
                             tag = tag[:-1]
                         if tag.startswith("/"):
                             tag = tag[1:]
+                    else:
+                        tag = None
                     parse_url(
                         url, args.output, args.strategy, args.chunking_strategy, tag
                     )
@@ -110,6 +112,8 @@ def main(args):
                         tag = tag[1:]
                     if "/" in tag:
                         tag = tag.split("/")[0]
+                else:
+                    tag = None
                 parse(
                     input_file, args.output, args.strategy, args.chunking_strategy, tag
                 )
