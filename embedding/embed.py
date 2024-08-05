@@ -89,7 +89,7 @@ if __name__ == "__main__":
     print("Done!")
     if args.emb_model_path.startswith("http"):
         print(f"Using Embedding API model endpoint: {args.emb_model_path}")
-        embed_model = OpenAIEmbedding(api_base=args.emb_model_path, api_key="dummy", embed_batch_size=1)
+        embed_model = OpenAIEmbedding(api_base=args.emb_model_path, api_key="dummy", embedding_ctx_length=512, chunk_size=32, tiktoken_enabled=False )
     else:
         print("Loading {}...".format(args.emb_model_path))
         embed_model = HuggingFaceEmbedding(args.emb_model_path)

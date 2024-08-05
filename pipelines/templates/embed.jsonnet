@@ -14,7 +14,7 @@ args:
 - name: chat_model
   description: The URL to the chat model (do NOT include /v1)
   type: string
-  default: "http://llama3.mlis.svc.cluster.local/v1"
+  default: "http://llama3.mlis.svc.cluster.local/"
 - name: mldm_base_url
   description: 'The base URL of the MLDM instance.'
   type: string
@@ -34,14 +34,14 @@ local embed_cmd(embed_model) =
 local chat_cmd(chat_model, embed_model) =
     "streamlit run gui.py -- --path-to-db /pfs/data --path-to-chat-model " + chat_model + " --emb-model-path " + embed_model + " --cutoff 0.6";
 
-function(input_repo, embed_model="http://embed.mlis.svc.cluster.local/v1", chat_model="http://llama3.mlis.svc.cluster.local/v1", mldm_base_url, service_type="NodePort", external_port="32080")
+function(input_repo, embed_model="http://embed.mlis.svc.cluster.local/v1", chat_model="http://llama3.mlis.svc.cluster.local", mldm_base_url, service_type="NodePort", external_port="32080")
 
 {
   "pipeline": {
     "name": "embed-docs",
   },
   "transform": {
-    "image": "vmtyler/pdk:embed-v0.1",
+    "image": "vmtyler/pdk:embed-v0.1a",
     "cmd": [
       "/bin/bash",
       "-C"
