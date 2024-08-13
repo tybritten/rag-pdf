@@ -28,9 +28,6 @@ args:
   default: "32080"
 */
 
-local embed_cmd(embed_model) = 
-    "python3 embed.py --data-path /pfs/data --emb-model-path " + embed_model + " --path-to-db /pfs/out/";
-
 local chat_cmd(chat_model, embed_model) =
     "streamlit run gui.py -- --path-to-db /pfs/data --path-to-chat-model " + chat_model + " --emb-model-path " + embed_model + " --cutoff 0.6";
 
