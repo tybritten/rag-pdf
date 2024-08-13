@@ -6,7 +6,7 @@ args:
 - name: input_repo
   description: The name of the input repo.
   type: string
-  default: documents
+  default: embed-docs
 - name: embed_model
   description: The URL to the embedding model (include /v1)
   type: string
@@ -34,7 +34,7 @@ local embed_cmd(embed_model) =
 local chat_cmd(chat_model, embed_model) =
     "streamlit run gui.py -- --path-to-db /pfs/data --path-to-chat-model " + chat_model + " --emb-model-path " + embed_model + " --cutoff 0.6";
 
-function(input_repo, embed_model="http://embed.mlis.svc.cluster.local/v1", chat_model="http://llama3.mlis.svc.cluster.local/v1", mldm_base_url, service_type="NodePort", external_port="32080")
+function(input_repo="embed-docs", embed_model="http://embed.mlis.svc.cluster.local/v1", chat_model="http://llama3.mlis.svc.cluster.local/v1", mldm_base_url, service_type="NodePort", external_port="32080")
 {
   "pipeline": {
     "name": "gui",
@@ -54,7 +54,7 @@ function(input_repo, embed_model="http://embed.mlis.svc.cluster.local/v1", chat_
   },
   "input": {
     "pfs": {
-      "repo": "embed-docs",
+      "repo": input_repo,
       "name": "data",
       "glob": "/"
     }
