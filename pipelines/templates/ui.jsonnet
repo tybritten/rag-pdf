@@ -46,7 +46,7 @@ function(input_repo="embed-docs", embed_model="http://embed.mlis.svc.cluster.loc
     "env": {
       "PYTHON_UNBUFFERED": "1",
       "PACH_PROXY_EXTERNAL_URL_BASE": mldm_base_url,
-      "DOCUMENT_REPO": input_repo
+      "DOCUMENT_REPO": "documents"
     }
   },
   "input": {
