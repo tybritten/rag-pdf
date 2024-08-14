@@ -18,7 +18,7 @@ function(input_repo)
     "name": "parse-docs",
   },
   "transform": {
-    "image": "vmtyler/pdk:parsing-v0.1.0a",
+    "image": "vmtyler/pdk:parsing-v0.1.1",
     "cmd": [
       "/bin/bash",
       "-C"

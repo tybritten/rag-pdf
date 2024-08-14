@@ -29,7 +29,7 @@ args:
 */
 
 local chat_cmd(chat_model, embed_model) =
-    "streamlit run gui.py -- --path-to-db /pfs/data --path-to-chat-model " + chat_model + " --emb-model-path " + embed_model + " --cutoff 0.6";
+    "streamlit run gui.py -- --path-to-db /pfs/data --path-to-chat-model " + chat_model + " --emb-model-path " + embed_model + " --cutoff 0.6 --streaming";
 
 function(input_repo="embed-docs", embed_model="http://embed.mlis.svc.cluster.local/v1", chat_model="http://llama3.mlis.svc.cluster.local/v1", mldm_base_url, service_type="NodePort", external_port="32080")
 {
