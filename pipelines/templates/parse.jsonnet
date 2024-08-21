@@ -24,7 +24,7 @@ function(input_repo)
       "-C"
     ],
     "stdin": [
-      "python3 parsing.py --input /pfs/documents --output /pfs/out --chunking_strategy by_title --folder_tags True"
+      "python3 parsing.py --input /pfs/documents --output /pfs/out --chunking_strategy by_title --folder_tags"
     ],
     "env": {
       "PYTHON_UNBUFFERED": "1"
@@ -42,4 +42,7 @@ function(input_repo)
     "disk": "10Gi"
   },
   "autoscaling": true,
+  "parallelismSpec": {
+    "constant": 2
+  },
 }
