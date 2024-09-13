@@ -1,0 +1,37 @@
+{
+    "autoscaling": false,
+    "input": {
+      "pfs": {
+        "glob": "/",
+        "repo": "vanna"
+      }
+    },
+    "pipeline": {
+      "name": "vanna-ai",
+      "project": {"name": "vanna"}
+    },
+    "podPatch": "[{\"op\": \"add\",\"path\": \"/volumes/-\",\"value\": {\"name\": \"data-store\",\"hostpath\": {\"path\": \"/var/snap/microk8s/common/vanna\",\"type\": \"Directory\"}}}, {\"op\": \"add\",\"path\": \"/containers/0/volumeMounts/-\",\"value\": {\"mountPath\": \"/data\",\"name\": \"data-store\"}}]",
+    "service": {
+      "externalPort": 30084,
+      "internalPort": 8084,
+      "type": "NodePort"
+    },
+    "transform": {
+      "cmd": [
+        "/bin/bash",
+        "-C"
+      ],
+      "env": {
+        "PYTHON_UNBUFFERED": "1",
+        "DB_PATH": "/data/db/",
+        "CHAT_MODEL_BASE_URL": "http://llama-3-1/v1",
+        "CHAT_MODEL": "meta-llama/Meta-Llama-3.1-8B-Instruct",
+        "DATABASE_CONNECTION_STRING": "DRIVER={ODBC Driver 17 for SQL Server};SERVER=IP,PORT;DATABASE=HPDemo;UID=sa;PWD=password"
+      },
+      "image": "vmtyler/pdk:vanna-0.0.3a",
+      "stdin": [
+        "python3 vanna-flask.py"
+      ]
+    }
+  }
+  
