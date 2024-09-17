@@ -1,18 +1,15 @@
 {
   "pipeline": {
-    "name": "gui",
-    "project": {
-      "name": "rag-demo"
-    }
+    "name": "gui"
   },
   "transform": {
-    "image": "vmtyler/pdk:gui-v0.1.6c",
+    "image": "vmtyler/pdk:gui-v0.4.2c",
     "cmd": [
       "/bin/bash",
       "-C"
     ],
     "stdin": [
-      "streamlit run gui.py -- --path-to-db /pfs/data --path-to-chat-model /data/Meta-Llama-3-70B-Instruct  --emb-model-path /data/bge-large-en-v1.5/ --cutoff 0.6"
+      "streamlit run gui.py -- --path-to-db /pfs/data --path-to-chat-model http://llama3.mlis.svc.cluster.local/v1 --model \"meta-llama/Meta-Llama-3.1-8B-Instruct\" --emb-model-path http://embed.mlis.svc.cluster.local/v1 --cutoff 0.4 --streaming"
     ],
     "env": {
       "PYTHON_UNBUFFERED": "1",
@@ -27,12 +24,6 @@
       "glob": "/"
     }
   },
-  "resourceLimits": {
-    "gpu": {
-      "type": "nvidia.com/gpu",
-      "number": 1
-    }
-  },
   "schedulingSpec": {
     "nodeSelector": {
       "nvidia.com/gpu.product": "NVIDIA-A100-PCIE-40GB"
@@ -43,6 +34,5 @@
     "type": "LoadBalancer",
     "externalPort": 80,
     "internalPort": 8501
-  },
-  "podPatch": "[{\"op\":\"add\",\"path\":\"/volumes/-\",\"value\":{\"name\":\"data-store\",\"hostpath\":{\"path\":\"/home/ubuntu\",\"type\":\"Directory\"}}},{\"op\":\"add\",\"path\":\"/containers/0/volumeMounts/-\",\"value\":{\"mountPath\":\"/data\",\"name\":\"data-store\"}},{\"op\":\"add\",\"path\":\"/runtimeClassName\",\"value\":\"nvidia\"}]"
+  }
 }
