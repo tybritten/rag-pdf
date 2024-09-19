@@ -1,6 +1,6 @@
 import argparse
 import os
-
+from loguru import logger
 import chromadb
 import streamlit as st
 from llama_index.core import (Settings, VectorStoreIndex,
@@ -10,12 +10,25 @@ from llama_index.core.query_engine import RetrieverQueryEngine
 from llama_index.core.retrievers import VectorIndexRetriever
 from llama_index.core.vector_stores.types import (MetadataFilter,
                                                   MetadataFilters)
-from llama_index.embeddings.huggingface import HuggingFaceEmbedding
 from llama_index.embeddings.openai import OpenAIEmbedding
-from llama_index.llms.huggingface import HuggingFaceLLM
-from llama_index.llms.openllm import OpenLLMAPI
+from llama_index.llms.openai_like import OpenAILike
 from llama_index.vector_stores.chroma import ChromaVectorStore
 from transformers import AutoTokenizer
+#from streamlit_session_browser_storage import SessionStorage
+#from streamlit_oauth import OAuth2Component
+#import jwt
+from iso639 import languages
+
+#AUTHORIZATION_URL = "http://localhost:8080/realms/rag/protocol/openid-connect/auth"
+#TOKEN_URL = "http://localhost:8080/realms/rag/protocol/openid-connect/token"
+
+#CLIENT_ID = "ui"
+#CLIENT_SECRET = "ETVwl9oy1SP0ZUu829v9byMuFWZ8V4XG"
+#REDIRECT_URI = "http://localhost:8501/component/streamlit_oauth.authorize_button"
+#SCOPE = "openid email profile"
+
+#oauth2 = OAuth2Component(CLIENT_ID, CLIENT_SECRET, AUTHORIZATION_URL, TOKEN_URL, TOKEN_URL)
+#sessionBrowserS = SessionStorage()
 
 parser = argparse.ArgumentParser()
 parser.add_argument("--path-to-db", type=str, default="db", help="path to chroma db")
@@ -29,6 +42,10 @@ parser.add_argument(
     "--path-to-chat-model",
     default="TinyLlama/TinyLlama-1.1B-Chat-v0.4",
     help="local path or URL to chat model",
+)
+parser.add_argument(
+    "--model-name",
+    help="Model name for OpenAI endpoints",
 )
 parser.add_argument(
     "--top-k",
@@ -49,14 +66,15 @@ parser.add_argument(
     action=argparse.BooleanOptionalAction,
 )
 args = parser.parse_args()
+logger.info(args)
 
 st.set_page_config(
     layout="wide", page_title="Retrieval Augmented Generation (RAG) Demo Q&A"
 )
 
+
 with open("static/style.css") as css:
     st.markdown(f"<style>{css.read()}</style>", unsafe_allow_html=True)
-
 
 ######
 
@@ -79,7 +97,7 @@ st.markdown(
 st.markdown(
     """
     <div class="top-bar">
-         <img src="/app/static/hpe_pri_wht_rev_rgb.png" alt="HPE Logo" height="55">  
+        <img src="/app/static/hpe_pri_wht_rev_rgb.png" alt="HPE Logo" height="55">  
     </div>
     """,
     unsafe_allow_html=True,
@@ -88,55 +106,39 @@ st.markdown(
 ######
 
 st.header("Retrieval Augmented Generation (RAG) Demo Q&A", divider="gray")
-
-st.session_state.temp = 0.2
+if 'temp' not in st.session_state:
+    st.session_state['temp'] = 0.2
 st.session_state.top_p = 0.8
-st.session_state.max_length = 250
-st.session_state.cutoff = args.cutoff
-st.session_state.top_k = args.top_k
+st.session_state.max_length = 5000
+if 'cutoff' not in st.session_state:
+    st.session_state["cutoff"] = args.cutoff
+if 'top_k' not in st.session_state:
+    st.session_state["top_k"] = args.top_k
 
+generate_kwargs = {
+        "temperature": st.session_state.temp,
+        "top_p": st.session_state.top_p,
+        "max_tokens": st.session_state.max_length,
+    }
 
+#    st.write(f"Hi, {st.session_state.token['name']}")
 @st.cache_data
 def load_chat_model(
     cuda_device="cuda:0",
-    temp=st.session_state.temp,
-    max_length=st.session_state.max_length,
-    top_p=st.session_state.top_p,
+    reload=False
 ):
-    generate_kwargs = {
-        "do_sample": True,
-        "temperature": temp,
-        "top_p": top_p,
-        "max_length": max_length,
-    }
-    if args.path_to_chat_model.startswith("http"):
-        st.write(f"Using OpenLLM model endpoint: {args.path_to_chat_model}")
-        modelpath = str(args.path_to_chat_model)
-        llm = OpenLLMAPI(address=modelpath, generate_kwargs=generate_kwargs)
-    else:
-        tokenizer = AutoTokenizer.from_pretrained(args.path_to_chat_model)
-        stopping_ids = [
-            tokenizer.eos_token_id,
-            tokenizer.convert_tokens_to_ids("<|eot_id|>"),
-        ]
-        llm = HuggingFaceLLM(
-            model_name=args.path_to_chat_model,
-            tokenizer_name=args.path_to_chat_model,
-            generate_kwargs=generate_kwargs,
-            stopping_ids=stopping_ids,
-        )
-        st.write(f"Using local model: {args.path_to_chat_model}")
+    if not reload:
+        st.write(f"Using OpenAPI-compatible LLM endpoint: {args.path_to_chat_model}")
+    modelpath = str(args.path_to_chat_model)
+    logger.info(f"loading chat model {args.model_name}")
+    llm = OpenAILike(model=args.model_name, api_base=modelpath, api_key="fake")
     Settings.llm = llm
-    return None
+    return llm
 
 
 def load_data():
-    if args.emb_model_path.startswith("http"):
-        st.write(f"Using Embedding API model endpoint: {args.emb_model_path}")
-        embed_model = OpenAIEmbedding(api_base=args.emb_model_path, api_key="dummy")
-    else:
-        st.write(f"Embedding model: {args.emb_model_path}")
-        embed_model = HuggingFaceEmbedding(model_name=args.emb_model_path)
+    st.write(f"Using OpenAPI-compatible Embedding endpoint: {args.emb_model_path}")
+    embed_model = OpenAIEmbedding(api_base=args.emb_model_path, api_key="dummy")
     chroma_client = chromadb.PersistentClient(args.path_to_db)
     chroma_collection = chroma_client.get_collection(name="documents")
     vector_store = ChromaVectorStore(chroma_collection=chroma_collection)
@@ -246,17 +248,14 @@ for message in st.session_state.messages:
     with chat_container.chat_message(message["role"], avatar=message["avatar"]):
         st.write(message["content"])
 
-default_instructions = "If you don't know the answer to a question, please don't share false information. \n Limit your response to 500 tokens."
-brief = "just generate the answer without a lot of explanations."
+default_instructions = "If you don't know the answer to a question, please don't share false information."
 
 
 def reload():
+    global llm
     with st.spinner(f"Loading {args.path_to_chat_model} q&a model..."):
-        llm = load_chat_model(
-            temp=st.session_state.temp,
-            top_p=st.session_state.top_p,
-            max_length=st.session_state.max_length,
-        )
+        llm = load_chat_model(reload=True)
+
     global query_engine
     query_engine = create_query_engine(
         cutoff=st.session_state.cutoff, top_k=st.session_state.top_k, filters=filters
@@ -269,11 +268,11 @@ def output_stream(llm_stream):
 
 
 with col1.expander("Settings"):
-    temp = st.slider("Temperature", 0.0, 1.0, key="temp")
-    top_k = st.slider("Top K", 1, 25, key="top_k")
-    cutoff = st.slider("Cutoff", 0.0, 1.0, key="cutoff")
-    instructions = st.text_area("Prompt Instructions", default_instructions)
-    st.button("Update Settings", on_click=reload())
+    temp = st.slider("Temperature", 0.0, 1.0, key="temp", on_change=None)
+    top_k = st.slider("Top K", 1, 25, key="top_k", on_change=None)
+    cutoff = st.slider("Cutoff", 0.0, 1.0, key="cutoff", on_change=None)
+    instructions = st.text_area("Prompt Instructions", default_instructions, on_change=None)
+    st.button("Save Settings", on_click=reload())
 
 # Accept user input
 if prompt := input_container.chat_input("Say something..."):
@@ -281,11 +280,11 @@ if prompt := input_container.chat_input("Say something..."):
     with chat_container.chat_message("user"):
         st.write(prompt)
 
-    print(f"Querying with prompt: {prompt}")
+    logger.info(f"Querying with prompt: {prompt}")
     output = query_engine.query(prompt)
     context_str = ""
     for node in output.source_nodes:
-        print(f"Context: {node.metadata}")
+        logger.info(f"Context: {node.metadata}")
         context_str += node.text.replace("\n", "  \n")
     text_qa_template_str_llama3 = f"""
         <|begin_of_text|><|start_header_id|>user<|end_header_id|>
@@ -299,16 +298,14 @@ if prompt := input_container.chat_input("Say something..."):
         {instructions}
         <|eot_id|><|start_header_id|>assistant<|end_header_id|>
         """
-    llm = Settings.llm
     if args.streaming:
         output_response = llm.stream_complete(
-            text_qa_template_str_llama3, formatted=True
-        )
+            text_qa_template_str_llama3, formatted=True, **generate_kwargs)
         with chat_container.chat_message("assistant", avatar="./static/logo.jpeg"):
             response = st.write_stream(output_stream(output_response))
     else:
-        output_response = llm.complete(text_qa_template_str_llama3)
-        print(output_response)
+        output_response = llm.complete(text_qa_template_str_llama3, formatted=True, **generate_kwargs)
+        logger.info(output_response)
         with chat_container.chat_message("assistant", avatar="./static/logo.jpeg"):
             response = st.write(output_response.text)
 
@@ -325,9 +322,23 @@ if prompt := input_container.chat_input("Say something..."):
             commit = references[i].node.metadata["Commit"]
             doctag = references[i].node.metadata["Tag"]
             newtext = text.encode("unicode_escape").decode("unicode_escape")
+            out_translate = None
+            if "original" in references[i].node.metadata:
+                original = references[i].node.metadata["original"]
+                if "lang" in references[i].node.metadata:
+                    lang = languages.get(alpha2=references[i].node.metadata["lang"]).name
+                    if lang == "Croatian":
+                        lang = "Serbian"
+                else:
+                    lang = "Unknown"
+                out_text = f"**Translated Text from {lang}:**  \n {newtext}  \n"
+                out_translate = f"**Original Text:** \n\n {original} \n"
+            else:
+                out_text = f"**Text:**  \n {newtext}  \n"
             out_title = f"**Source:** {title}  \n **Page:** {page}  \n **Similarity Score:** {round((references[i].score * 100),3)}% \n"
-            out_text = f"**Text:**  \n {newtext}  \n"
+            
             title = title.replace(" ", "%20")
+
             if doctag:
                 doctag = doctag.replace(" ", "%20")
                 out_link = f"[Link to file in Commit {commit}]({proxy_url}/proxyForward/pfs/{project}/{doc_repo}/{commit}/{doctag}/{title}#page={page})\n"
@@ -335,6 +346,33 @@ if prompt := input_container.chat_input("Say something..."):
                 out_link = f"[Link to file in Commit {commit}]({proxy_url}/proxyForward/pfs/{project}/{doc_repo}/{commit}/{title}#page={page})\n"
             col2.markdown(out_title)
             col2.write(out_text, unsafe_allow_html=True)
+            if out_translate:
+                col2.write(out_translate, unsafe_allow_html=True)
             if not title.startswith("http"):
                 col2.write(out_link)
             col2.divider()
+
+
+#token = sessionBrowserS.getItem('token')
+#print(sessionBrowserS.getAll())
+#if not token:
+#    result = oauth2.authorize_button("Continue with Keycloak", REDIRECT_URI, SCOPE)
+#    if result:
+#        token = result.get('token')
+#        sessionBrowserS.setItem('token', token)
+#        main()
+#else:
+#    try:
+#        jwks_url = "http://localhost:8080/realms/rag/protocol/openid-connect/certs"
+#        jwks_client = jwt.PyJWKClient(jwks_url)
+#        signing_key = jwks_client.get_signing_key_from_jwt(token['access_token']).key
+#        token['access_token']["exp"] = "1224853239"
+#        payload = jwt.decode(
+#                    token['access_token'],
+#                    signing_key, algorithms=["RS256"], audience='account')
+#        st.session_state['token'] = payload
+#        main()
+#    except Exception as e:
+#        print(f"bad token. Reason: {e}")
+#        sessionBrowserS.deleteAll()
+#        st.rerun()
