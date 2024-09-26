@@ -1,38 +1,33 @@
 {
-  "pipeline": {
-    "name": "parse-docs",
-    "project": {
-      "name": "rag-demo"
+  "autoscaling": false,
+  "input": {
+    "pfs": {
+      "glob": "/*/*",
+      "repo": "documents"
     }
   },
+  "parallelismSpec": {
+    "constant": 2
+  },
+  "pipeline": {
+    "name": "parse-docs"
+  },
+  "resourceRequests": {
+    "cpu": 4,
+    "disk": "10Gi",
+    "memory": "16Gi"
+  },
   "transform": {
-    "image": "vmtyler/pdk:parsing-v0.1.0a",
     "cmd": [
       "/bin/bash",
       "-C"
     ],
-    "stdin": [
-      "python3 parsing.py --input /pfs/documents --output /pfs/out --chunking_strategy by_title --folder_tags True"
-    ],
     "env": {
       "PYTHON_UNBUFFERED": "1"
-    }
-  },
-  "input": {
-    "pfs": {
-      "repo": "documents",
-      "glob": "/*"
-    }
-  },
-  "resourceRequests": {
-    "cpu": 4,
-    "memory": "16Gi",
-    "disk": "10Gi"
-  },
-  "resourceLimits": {
-    "gpu": {
-      "type": "nvidia.com/gpu",
-      "number": 1
-    }
+    },
+    "image": "vmtyler/pdk:parsing-v0.2.0c",
+    "stdin": [
+      "python3 parsing.py --input /pfs/documents --output /pfs/out --chunking_strategy by_title --folder_tags  --languages eng:rus"
+    ]
   }
 }

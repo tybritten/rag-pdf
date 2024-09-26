@@ -1,40 +1,25 @@
 {
-  "pipeline": {
-    "name": "embed-docs",
-    "project": {
-      "name": "rag-demo"
+  "autoscaling": false,
+  "input": {
+    "pfs": {
+      "glob": "/",
+      "name": "data",
+      "repo": "parse-docs"
     }
   },
+  "pipeline": {
+    "name": "embed-docs"
+  },
   "transform": {
-    "image": "vmtyler/pdk:embed-v0.0.13a",
     "cmd": [
       "/bin/bash",
       "-C"
     ],
-    "stdin": [
-      "python3 embed.py --data-path /pfs/data --emb-model-path /data/bge-large-en-v1.5/ --path-to-db /pfs/out/"
-    ],
     "env": {
       "PYTHON_UNBUFFERED": "1"
-    }
-  },
-  "input": {
-    "pfs": {
-      "repo": "parse-docs",
-      "name": "data",
-      "glob": "/"
-    }
-  },
-  "resourceLimits": {
-    "gpu": {
-      "type": "nvidia.com/gpu",
-      "number": 1
-    }
-  },
-  "schedulingSpec": {
-    "nodeSelector": {
-      "nvidia.com/gpu.product": "NVIDIA-A2"
-    }
-  },
-  "podPatch": "[{\"op\":\"add\",\"path\":\"/volumes/-\",\"value\":{\"name\":\"data-store\",\"hostpath\":{\"path\":\"/home/ubuntu\",\"type\":\"Directory\"}}},{\"op\":\"add\",\"path\":\"/containers/0/volumeMounts/-\",\"value\":{\"mountPath\":\"/data\",\"name\":\"data-store\"}},{\"op\":\"add\",\"path\":\"/runtimeClassName\",\"value\":\"nvidia\"}]"
-}
+    },
+    "image": "vmtyler/pdk:embed-v0.2.3",
+    "stdin": [
+      "python3 embed.py --data-path /pfs/data --emb-model-path http://embed.mlis.svc.cluster.local/v1 --path-to-db /pfs/out/ --translate-model '/mnt/models/Meta-Llama-3.1-8B-Instruct/' --model-url http://llama3.mlis.rag.psdc.lan/v1"
+    ]
+  }

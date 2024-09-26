@@ -7,42 +7,46 @@ args:
   description: The name of the input repo.
   type: string
   default: documents
+- name: langs
+  description: OCR languages for Tesseract, colon separated for Tesseract (https://tesseract-ocr.github.io/tessdoc/Data-Files-in-different-versions.html)
+  type: string
+  default: eng
 */
 
+local parse_cmd(langs='eng') = 
+          "python3 parsing.py --input /pfs/documents --output /pfs/out --chunking_strategy by_title --folder_tags  --languages " + langs;
 
-
-function(input_repo)
+function(input_repo='documents', langs="eng")
 
 {
+  "autoscaling": false,
+  "input": {
+    "pfs": {
+      "glob": "/*/*",
+      "repo": input_repo
+    }
+  },
+  "parallelismSpec": {
+    "constant": 2
+  },
   "pipeline": {
-    "name": "parse-docs",
+    "name": "parse-docs"
+  },
+  "resourceRequests": {
+    "cpu": 4,
+    "disk": "10Gi",
+    "memory": "16Gi"
   },
   "transform": {
-    "image": "vmtyler/pdk:parsing-v0.1.1",
     "cmd": [
       "/bin/bash",
       "-C"
     ],
-    "stdin": [
-      "python3 parsing.py --input /pfs/documents --output /pfs/out --chunking_strategy by_title --folder_tags"
-    ],
     "env": {
       "PYTHON_UNBUFFERED": "1"
-    }
-  },
-  "input": {
-    "pfs": {
-      "repo": input_repo,
-      "glob": "/*/*"
-    }
-  },
-  "resourceRequests": {
-    "cpu": 4,
-    "memory": "16Gi",
-    "disk": "10Gi"
-  },
-  "autoscaling": true,
-  "parallelismSpec": {
-    "constant": 2
-  },
+    },
+    "image": "vmtyler/pdk:parsing-v0.2.0c",
+    "stdin": [parse_cmd(langs)]
+  }
 }
+

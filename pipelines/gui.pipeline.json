@@ -1,38 +1,37 @@
 {
+  "autoscaling": false,
+  "input": {
+    "pfs": {
+      "glob": "/",
+      "name": "data",
+      "repo": "embed-docs",
+      "branch": "tg"
+    }
+  },
   "pipeline": {
-    "name": "gui"
+    "name": "gui",
+    "project": {
+      "name": "default"
+    }
+  },
+  "service": {
+    "externalPort": 32080,
+    "internalPort": 8501,
+    "type": "NodePort"
   },
   "transform": {
-    "image": "vmtyler/pdk:gui-v0.4.2c",
     "cmd": [
       "/bin/bash",
       "-C"
     ],
-    "stdin": [
-      "streamlit run gui.py -- --path-to-db /pfs/data --path-to-chat-model http://llama3.mlis.svc.cluster.local/v1 --model \"meta-llama/Meta-Llama-3.1-8B-Instruct\" --emb-model-path http://embed.mlis.svc.cluster.local/v1 --cutoff 0.4 --streaming"
-    ],
     "env": {
-      "PYTHON_UNBUFFERED": "1",
-      "PACH_PROXY_EXTERNAL_URL_BASE": "http://192.168.11.100",
-      "DOCUMENT_REPO": "documents"
-    }
-  },
-  "input": {
-    "pfs": {
-      "repo": "embed-docs",
-      "name": "data",
-      "glob": "/"
-    }
-  },
-  "schedulingSpec": {
-    "nodeSelector": {
-      "nvidia.com/gpu.product": "NVIDIA-A100-PCIE-40GB"
-    }
-  },
-  "autoscaling": false,
-  "service": {
-    "type": "LoadBalancer",
-    "externalPort": 80,
-    "internalPort": 8501
+      "DOCUMENT_REPO": "documents",
+      "PACH_PROXY_EXTERNAL_URL_BASE": "http://rag.psdc.lan:30080",
+      "PYTHON_UNBUFFERED": "1"
+    },
+    "image": "vmtyler/pdk:gui-v0.4.2c",
+    "stdin": [
+      "streamlit run gui.py -- --path-to-db /pfs/data --path-to-chat-model http://llama3.mlis.svc.cluster.local/v1 --model \"/mnt/models/Meta-Llama-3.1-8B-Instruct/\" --emb-model-path http://embed.mlis.svc.cluster.local/v1 --cutoff 0.4 --streaming"
+    ]
   }
 }

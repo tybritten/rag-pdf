@@ -37,7 +37,7 @@ function(input_repo="embed-docs", embed_model="http://embed.mlis.svc.cluster.loc
     "name": "gui",
   },
   "transform": {
-    "image": "vmtyler/pdk:gui-v0.3.0b",
+    "image": "vmtyler/pdk:gui-v0.4.2c",
     "cmd": [
       "/bin/bash",
       "-C"
