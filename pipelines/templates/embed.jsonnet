@@ -29,7 +29,7 @@ local join(a) =
 local args(translate_url, translate_model, embed_model) = 
     join([
     if translate_url != "" then ["--model-url", translate_url, "--translate-model", translate_model],
-    ["--emb-model-path", embed_model, "--type", type, " --path-to-db", "/pfs/out"],
+    ["--emb-model-path", embed_model, "--path-to-db", "/pfs/out"],
     ]);
 
 
@@ -40,7 +40,7 @@ function(input_repo="parse-docs", embed_model="http://embed.mlis.svc.cluster.loc
     "name": "embed-docs",
   },
   "transform": {
-    "image": "vmtyler/pdk:embed-v0.1b",
+    "image": "vmtyler/pdk:embed-v0.2.3",
     "cmd": [
       "/bin/bash",
       "-C"

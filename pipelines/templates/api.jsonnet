@@ -32,27 +32,29 @@ args:
   default: "32080"
 */
 
-local chat_cmd(chat_url, chat_model, embed_model) =
-    "streamlit run gui.py -- --path-to-db /pfs/data --path-to-chat-model " + chat_url + " --model " + chat_model +" --emb-model-path " + embed_model + " --cutoff 0.6 --streaming";
 
-function(input_repo="embed-docs", embed_model="http://embed.mlis.svc.cluster.local/v1", chat_url="http://llama3.mlis.svc.cluster.local/v1", chat_model, mldm_base_url="http://localhost:30080", service_type="NodePort", external_port="32080")
+function(input_repo="embed-docs", embed_model="http://embed.mlis.svc.cluster.local/v1", chat_url="http://llama3.mlis.svc.cluster.local/v1", chat_model="", mldm_base_url="http://localhost:30080", service_type="NodePort", external_port="32080")
 {
   "pipeline": {
-    "name": "gui",
+    "name": "api",
   },
-  "transform": {
-    "image": "vmtyler/pdk:gui-v0.4.2c",
-    "cmd": [
-      "/bin/bash",
-      "-C"
-    ],
-    "stdin": [chat_cmd(chat_url, chat_model, embed_model)],
-    "env": {
-      "PYTHON_UNBUFFERED": "1",
-      "PACH_PROXY_EXTERNAL_URL_BASE": mldm_base_url,
-      "DOCUMENT_REPO": "documents"
-    }
-  },
+    "transform": {
+        "cmd": [
+            "./startup.sh"
+        ],
+        "env": {
+            "OPENAI_API_KEY": "fake",
+            "DOCUMENT_REPO": input_repo,
+            "PACH_PROXY_EXTERNAL_URL_BASE": mldm_base_url,
+            "PYTHON_UNBUFFERED": "1",
+            "EMBED_MODEL": embed_model,
+            "CHAT_MODEL_BASE_URL": chat_url,
+            "DB_PATH": "/pfs/data",
+            "MAX_TOKENS": "2048",
+            "DEFAULT_CHAT_MODEL": chat_model
+        },
+        "image": "vmtyler/pdk:ui-api-0.0.3"
+    },
   "input": {
     "pfs": {
       "repo": input_repo,
@@ -64,7 +66,7 @@ function(input_repo="embed-docs", embed_model="http://embed.mlis.svc.cluster.loc
   "service": {
     "type": service_type,
     "externalPort": std.parseInt(external_port),
-    "internalPort": 8501
+    "internalPort": 5000
   },
 }
 

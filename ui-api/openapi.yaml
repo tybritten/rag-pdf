@@ -1,0 +1,95 @@
+openapi: '3.0.3'
+info:
+  title: Retrieval Augmented Generation API
+  version: 1.0.0
+paths:
+  GET /sources:
+     summary: List available data sources and tags
+       response:   
+          content schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    id:
+                      type: string
+                    name:
+                      type: string
+                    tags:
+                      type: array
+                      items:
+                        type: string
+
+  GET /config:
+      summary: Get available models and default configuration
+      response:
+          content schema:
+                type: object
+                properties:
+                  models:
+                    type: array
+                    items:
+                      type: string
+                  defaultConfig:
+                    type: object
+                    properties:
+                      modelTemperature:
+                        type: number
+                      topK:
+                        type: integer
+                      maxOutputTokens:
+                        type: integer
+                      systemPrompt:
+                        type: string
+                      similarityCutoff:
+                        type: number
+
+  POST /generate:
+      summary: Generate response based on query and configuration
+      request:
+        required: true
+        content schema:
+              type: object
+              properties:
+                query:
+                  type: string
+                tags:
+                  type: array
+                  items:
+                    type: string
+                model:
+                  type: string
+                modelTemperature:
+                  type: number
+                topK:
+                  type: integer
+                maxOutputTokens:
+                  type: integer
+                systemPrompt:
+                  type: string
+                similarityCutoff:
+                  type: number
+              required:
+                - query
+      response:
+          content schema (stream):
+                type: object
+                properties:
+                  event:
+                    type: string
+                    enum: [answer, reference]
+                  data:
+                    oneOf:
+                      - type: string  # for answer events
+                      - type: object  # for reference events
+                        properties:
+                          source:
+                            type: string
+                          text:
+                            type: string
+                          similarityScore:
+                            type: number
+                          page:
+                            type: integer
+                          url:
+                            type: string
