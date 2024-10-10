@@ -53,7 +53,7 @@ function(input_repo="embed-docs", embed_model="http://embed.mlis.svc.cluster.loc
             "MAX_TOKENS": "2048",
             "DEFAULT_CHAT_MODEL": chat_model
         },
-        "image": "vmtyler/pdk:ui-api-0.0.3"
+        "image": "vmtyler/pdk:ui-api-0.0.7f"
     },
   "input": {
     "pfs": {

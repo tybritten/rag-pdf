@@ -40,7 +40,7 @@ function(input_repo="parse-docs", embed_model="http://embed.mlis.svc.cluster.loc
     "name": "embed-docs",
   },
   "transform": {
-    "image": "vmtyler/pdk:embed-v0.2.3",
+    "image": "vmtyler/pdk:embed-v0.2.5a",
     "cmd": [
       "/bin/bash",
       "-C"
