@@ -1,7 +1,9 @@
-import os
 import json
-from loguru import logger
+import os
+import time
 import chromadb
+import asyncio
+from fastapi.encoders import jsonable_encoder
 from llama_index.core import Settings, VectorStoreIndex, get_response_synthesizer
 from llama_index.core.postprocessor import SimilarityPostprocessor
 from llama_index.core.query_engine import RetrieverQueryEngine
@@ -10,9 +12,17 @@ from llama_index.core.vector_stores.types import MetadataFilter, MetadataFilters
 from llama_index.embeddings.openai import OpenAIEmbedding
 from llama_index.llms.openai_like import OpenAILike
 from llama_index.vector_stores.chroma import ChromaVectorStore
-from models import DefaultConfig, ReferenceData, GeneratePostResponse, Event
+from loguru import logger
 from openai import OpenAI
-from fastapi.encoders import jsonable_encoder
+
+from models import (
+    DefaultConfig,
+    Event,
+    GeneratePostResponse,
+    ReferenceData,
+    ConfigItem,
+    ValueType,
+)
 
 
 class AIPipeline:
@@ -41,13 +51,56 @@ class AIPipeline:
         self.streaming = streaming
 
     def get_config(self):
-        return DefaultConfig(
-            modelTemperature=self.temp,
-            topK=self.top_k,
-            maxOutputTokens=self.max_tokens,
-            systemPrompt=self.system_prompt,
-            similarityCutoff=self.similarity_cutoff,
+        config = DefaultConfig(
+            [
+                ConfigItem(
+                    name="modelTemperature",
+                    friendlyName="Model Temperature",
+                    minValue=0.0,
+                    maxValue=1.0,
+                    valueType=ValueType.FLOAT,
+                    defaultValue=self.temp,
+                    description="The randomness of the LLM response higher is more random, lower is more deterministic",
+                ),
+                ConfigItem(
+                    name="topK",
+                    friendlyName="Top K",
+                    minValue=0,
+                    maxValue=100,
+                    valueType=ValueType.INT,
+                    defaultValue=self.top_k,
+                    description="The Maximum number of chunks to retreive from the vector DB ",
+                ),
+                ConfigItem(
+                    name="maxOutputTokens",
+                    friendlyName="Maximum Output Tokens",
+                    minValue=0,
+                    maxValue=5000,
+                    valueType=ValueType.INT,
+                    defaultValue=self.max_tokens,
+                    description="The Maximum number of tokens for the LLM to generate ",
+                ),
+                ConfigItem(
+                    name="systemPrompt",
+                    friendlyName="LLM Instructions",
+                    minValue=0,
+                    maxValue=5000,
+                    valueType=ValueType.STRING,
+                    defaultValue=self.system_prompt,
+                    description="The Instu ",
+                ),
+                ConfigItem(
+                    name="similarityCutoff",
+                    friendlyName="Similarity Cutoff",
+                    minValue=0.0,
+                    maxValue=1.0,
+                    valueType=ValueType.FLOAT,
+                    defaultValue=self.similarity_cutoff,
+                    description="Minimum Similarity Score for retrieved chunks",
+                ),
+            ]
         )
+        return config
 
     def get_models(self):
         modelpath = str(self.chat_model_url)
@@ -119,10 +172,11 @@ class AIPipeline:
     def output_stream(self, llm_stream, output_nodes):
         references = self.format_references(output_nodes)
         resp = GeneratePostResponse(event=Event.reference, data=references)
-        yield json.dumps(jsonable_encoder(resp))
+        yield f'{json.dumps(jsonable_encoder(resp))}\n'
         for chunk in llm_stream:
             stuff = GeneratePostResponse(event=Event.answer, data=chunk.delta)
-            yield json.dumps(jsonable_encoder(stuff))
+            yield f'{json.dumps(jsonable_encoder(stuff))}\n'
+            
 
     def generate_response(
         self, query, system_prompt, model, model_args, query_engine, streaming=True
@@ -135,7 +189,11 @@ class AIPipeline:
                 else self.temp
             ),
             "top_p": 0.5,
-            "max_tokens": model_args["max_tokens"] if "max_tokens" in model_args else self.max_tokens,
+            "max_tokens": (
+                model_args["max_tokens"]
+                if "max_tokens" in model_args
+                else self.max_tokens
+            ),
         }
         llm = self.load_llm()
         logger.info(f"Querying with: {query}")
@@ -161,7 +219,7 @@ class AIPipeline:
             <|eot_id|><|start_header_id|>assistant<|end_header_id|>
             """
         if self.streaming:
-            logger.info(f"Requesting model {llm.model}")
+            logger.info(f"Requesting model {llm.model} for streaming")
             return (
                 llm.stream_complete(
                     text_qa_template_str_llama3, formatted=True, **generate_kwargs
@@ -185,12 +243,11 @@ class AIPipeline:
             score = round((references[i].score * 100), 3)
             commit = references[i].node.metadata["Commit"]
             doctag = references[i].node.metadata["Tag"]
-            newtext = text.encode("unicode_escape").decode("unicode_escape")
             if doctag:
                 doctag = doctag.replace(" ", "%20")
-                out_link = f"[Link to file in Commit {commit}]({proxy_url}/proxyForward/pfs/{project}/{doc_repo}/{commit}/{doctag}/{title}#page={page})\n"
+                out_link = f"{proxy_url}/proxyForward/pfs/{project}/{doc_repo}/{commit}/{doctag}/{title}#page={page}"
             else:
-                out_link = f"[Link to file in Commit {commit}]({proxy_url}/proxyForward/pfs/{project}/{doc_repo}/{commit}/{title}#page={page})\n"
+                out_link = f"{proxy_url}/proxyForward/pfs/{project}/{doc_repo}/{commit}/{title}#page={page}"
             if title.startswith("http"):
                 out_link = title
             ref = ReferenceData(

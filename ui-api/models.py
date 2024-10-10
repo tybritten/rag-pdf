@@ -5,7 +5,7 @@
 from __future__ import annotations
 
 from enum import Enum
-from typing import List, Optional, Union
+from typing import List, Optional, Union, Dict
 
 from pydantic import BaseModel
 
@@ -16,13 +16,23 @@ class SourcesGetResponseItem(BaseModel):
     tags: Optional[List[str]] = None
 
 
-class DefaultConfig(BaseModel):
-    modelTemperature: Optional[float] = None
-    topK: Optional[int] = None
-    maxOutputTokens: Optional[int] = None
-    systemPrompt: Optional[str] = None
-    similarityCutoff: Optional[float] = None
+class ValueType(Enum):
+    STRING = "string"
+    INT = "int"
+    FLOAT = "float"
 
+
+class ConfigItem(BaseModel):
+    name: str
+    friendlyName: Optional[str] = None
+    valueType: ValueType
+    minValue: Union[int, float]
+    maxValue: Union[int, float]
+    defaultValue: Union[int, float, str] = None
+    description: Optional[str] = None
+
+
+DefaultConfig = list[ConfigItem]
 
 class ConfigGetResponse(BaseModel):
     models: Optional[List[str]] = None
@@ -33,11 +43,7 @@ class GeneratePostRequest(BaseModel):
     query: str
     tags: Optional[List[str]] = None
     model: Optional[str] = None
-    modelTemperature: Optional[float] = None
-    topK: Optional[int] = None
-    maxOutputTokens: Optional[int] = None
-    systemPrompt: Optional[str] = None
-    similarityCutoff: Optional[float] = None
+    config: Optional[Dict[str, Union[int, float, str]]]
 
 
 class Event(Enum):

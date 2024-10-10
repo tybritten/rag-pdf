@@ -1,11 +1,18 @@
 from __future__ import annotations
+
 import os
 from typing import List
-from ai import AIPipeline
-from fastapi import FastAPI
-from fastapi.responses import StreamingResponse
+
 import uvicorn
+from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
+#from fastapi.responses import StreamingResponse
+from sse_starlette.sse import EventSourceResponse
+import asyncio
+from starlette.responses import StreamingResponse
 from loguru import logger
+
+from ai import AIPipeline
 from models import (
     ConfigGetResponse,
     GeneratePostRequest,
@@ -45,6 +52,14 @@ app = FastAPI(
     version="1.0.0",
 )
 
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
 index, total_collection = ai.load_data()
 llm = ai.load_llm()
 
@@ -53,23 +68,32 @@ llm = ai.load_llm()
 def get_config() -> ConfigGetResponse:
     config = ai.get_config()
     models = ai.get_models()
+    models.append("fake-model-800B-test")
     logger.info(f"config: {config}")
     logger.info(f"models: {models}")
     return ConfigGetResponse(defaultConfig=config, models=models)
 
-
 @app.post("/generate", response_model=GeneratePostResponse)
 def post_generate(body: GeneratePostRequest) -> GeneratePostResponse:
-    cutoff = body.similarityCutoff if "similarityCutoff" in body else None
-    top_k = body.topK if "topK" in body else None
     tags = body.tags if "tags" in body else None
-    temp = body.modelTemperature if "modelTemperature" in body else None
-    max_tokens = body.maxOutputTokens if "maxOutputTokens" in body else None
+    if "config" in body:
+        config = body.config
+        cutoff = config.similarityCutoff if "similarityCutoff" in config else None
+        top_k = config.topK if "topK" in config else None
+
+        temp = config.modelTemperature if "modelTemperature" in config else None
+        max_tokens = config.maxOutputTokens if "maxOutputTokens" in config else None
+    else:
+        cutoff = None
+        top_k = None
+        temp = None
+        max_tokens = None
     query_engine = ai.create_query_engine(
         index=index, filters=tags, cutoff=cutoff, top_k=top_k
     )
     system_prompt = body.systemPrompt if "systemPrompt" in body else SYSTEM_PROMPT
-    model = body.model if "model" in body else DEFAULT_CHAT_MODEL
+    #model = body.model if "model" in body else DEFAULT_CHAT_MODEL
+    model = DEFAULT_CHAT_MODEL
     model_options = {
         "cutoff": cutoff,
         "top_k": top_k,
@@ -84,8 +108,7 @@ def post_generate(body: GeneratePostRequest) -> GeneratePostResponse:
     ) = ai.generate_response(
         body.query, system_prompt, model, model_options, query_engine
     )
-    streamingresponse = ai.output_stream(response, output_nodes)
-    return StreamingResponse(streamingresponse)
+    return StreamingResponse(ai.output_stream(response, output_nodes), media_type="application/x-ndjson")
 
 
 @app.get("/sources", response_model=List[SourcesGetResponse])

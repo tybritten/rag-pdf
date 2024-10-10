@@ -72,6 +72,7 @@ llama-index-readers-llama-parse==0.1.4
 llama-index-vector-stores-chroma==0.1.6
 llama-parse==0.4.0
 llamaindex-py-client==0.1.13
+loguru==0.7.2
 markdown-it-py==3.0.0
 MarkupSafe==2.1.5
 marshmallow==3.21.1

@@ -14,15 +14,11 @@ from llama_index.llms.openai_like import OpenAILike
 from openai import OpenAI
 from typing import Any, List, Optional, Tuple
 from iso639 import languages
-
+from loguru import logger
 Embedding = List[float]
 
 
-generate_kwargs = {
-        "temperature": 0.2,
-        "top_p": 0.8,
-        "max_tokens": 2500,
-    }
+
 
 class LengthSafeEmbeddings(OpenAIEmbedding):
     
@@ -37,7 +33,7 @@ class LengthSafeEmbeddings(OpenAIEmbedding):
 
         """
         text = text.replace("\n", " ")
-        print("length safe")
+        logger.info("length safe")
         if len(text) > 512:
             #split into multiple batches and reassemble after
             embeddings = []
@@ -54,7 +50,7 @@ class LengthSafeEmbeddings(OpenAIEmbedding):
         )
 
 
-def main(data_path, embed_model, db, model_url=None, translate_model=None):
+def main(data_path, embed_model, db, model_url=None, translate_model=None, max_tokens=1000):
     collection = db.get_or_create_collection(
         name="documents", metadata={"hnsw:space": "cosine"}
     )
@@ -92,9 +88,16 @@ def main(data_path, embed_model, db, model_url=None, translate_model=None):
                             "Commit": os.environ.get("PACH_JOB_ID", ""),
                             "Tag": tag,
                         }
-                        if model_url and not (doc["metadata"]["lang"] != '' or doc["metadata"]["lang"] != 'en' or doc["metadata"]["lang"] != None) and len(text) > 5:
+                        if model_url and not (doc["metadata"]["lang"] == '' or doc["metadata"]["lang"] == 'en' or doc["metadata"]["lang"] == None) and len(text) > 10:
                             llm = OpenAILike(model=translate_model, api_base=model_url, api_key="none")
+                            generate_kwargs = {
+                                "temperature": 0.2,
+                                "top_p": 0.8,
+                                "max_tokens": max_tokens,
+                            }
+                            logger.info(f"generate args {generate_kwargs}")
                             lang = languages.get(alpha2=doc["metadata"]["lang"]).name
+                            logger.info(f'Translating from {doc["metadata"]["lang"]} for {source}')
                             translate_template_str_llama3 = f"""
                                 <|begin_of_text|><|start_header_id|>user<|end_header_id|>
                                 Please translate the following text from {lang} to English with no extra explanations.
@@ -108,12 +111,12 @@ def main(data_path, embed_model, db, model_url=None, translate_model=None):
 
                         docs.append(TextNode(text=text, metadata=metadata))
 
-    print("Number of chunks: ", len(docs))
+    logger.info("Number of chunks: ", len(docs))
 
     index.insert_nodes(docs, show_progress=True)
-    print("Indexing done!")
+    logger.info("Indexing done!")
     index.storage_context.persist(persist_dir=data_path)
-    print("Persisting done!")
+    logger.info("Persisting done!")
 
 
 if __name__ == "__main__":
@@ -141,19 +144,22 @@ if __name__ == "__main__":
     parser.add_argument(
         "--model-url", type=str, help="URL to OpenAPI model to translate"
     )
+    parser.add_argument(
+        "--max-tokens", type=int, default=1000, help="max_tokens"
+    )
     parser.add_argument("--output", help="output directory")
     args = parser.parse_args()
     settings = chromadb.get_settings()
     settings.allow_reset = True
-    print(f"creating/loading db at {args.path_to_db}...")
+    logger.info(f"creating/loading db at {args.path_to_db}...")
     db = chromadb.PersistentClient(path=args.path_to_db, settings=settings)
-    print("Done!")
+    logger.info("Done!")
     if args.emb_model_path.startswith("http"):
-        print(f"Using Embedding API model endpoint: {args.emb_model_path}")
+        logger.info(f"Using Embedding API model endpoint: {args.emb_model_path}")
         embed_model = LengthSafeEmbeddings(api_base=args.emb_model_path, api_key="dummy", embed_batch_size=32, model_name="BAAI/bge-large-en-v1.5" )
     else:
-        print("Loading {}...".format(args.emb_model_path))
+        logger.info("Loading {}...".format(args.emb_model_path))
         embed_model = HuggingFaceEmbedding(args.emb_model_path)
-    main(args.data_path, embed_model, db, args.model_url, args.translate_model)
+    main(args.data_path, embed_model, db, args.model_url, args.translate_model, args.max_tokens)
     if args.output:
         shutil.copytree(args.path_to_db)
