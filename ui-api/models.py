@@ -5,7 +5,7 @@
 from __future__ import annotations
 
 from enum import Enum
-from typing import List, Optional, Union, Dict
+from typing import Dict, List, Optional, Union
 
 from pydantic import BaseModel
 
@@ -33,6 +33,7 @@ class ConfigItem(BaseModel):
 
 
 DefaultConfig = list[ConfigItem]
+
 
 class ConfigGetResponse(BaseModel):
     models: Optional[List[str]] = None

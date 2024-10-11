@@ -1,24 +1,20 @@
 from __future__ import annotations
 
+import asyncio
 import os
 from typing import List
 
 import uvicorn
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-#from fastapi.responses import StreamingResponse
-from sse_starlette.sse import EventSourceResponse
-import asyncio
-from starlette.responses import StreamingResponse
 from loguru import logger
+# from fastapi.responses import StreamingResponse
+from sse_starlette.sse import EventSourceResponse
+from starlette.responses import StreamingResponse
 
 from ai import AIPipeline
-from models import (
-    ConfigGetResponse,
-    GeneratePostRequest,
-    GeneratePostResponse,
-    SourcesGetResponse,
-)
+from models import (ConfigGetResponse, GeneratePostRequest,
+                    GeneratePostResponse, SourcesGetResponse)
 
 EMBED_MODEL = os.environ.get("EMBED_MODEL", "BAAI/bge-base-en-v1.5")
 DEFAULT_CHAT_MODEL = os.environ.get("CHAT_MODEL", None)
@@ -67,11 +63,11 @@ llm = ai.load_llm()
 @app.get("/config", response_model=ConfigGetResponse)
 def get_config() -> ConfigGetResponse:
     config = ai.get_config()
-    models = ai.get_models()
-    models.append("fake-model-800B-test")
+    models = list(ai.get_models().keys())
     logger.info(f"config: {config}")
     logger.info(f"models: {models}")
     return ConfigGetResponse(defaultConfig=config, models=models)
+
 
 @app.post("/generate", response_model=GeneratePostResponse)
 def post_generate(body: GeneratePostRequest) -> GeneratePostResponse:
@@ -92,8 +88,7 @@ def post_generate(body: GeneratePostRequest) -> GeneratePostResponse:
         index=index, filters=tags, cutoff=cutoff, top_k=top_k
     )
     system_prompt = body.systemPrompt if "systemPrompt" in body else SYSTEM_PROMPT
-    #model = body.model if "model" in body else DEFAULT_CHAT_MODEL
-    model = DEFAULT_CHAT_MODEL
+    model = body.model
     model_options = {
         "cutoff": cutoff,
         "top_k": top_k,
@@ -108,7 +103,9 @@ def post_generate(body: GeneratePostRequest) -> GeneratePostResponse:
     ) = ai.generate_response(
         body.query, system_prompt, model, model_options, query_engine
     )
-    return StreamingResponse(ai.output_stream(response, output_nodes), media_type="application/x-ndjson")
+    return StreamingResponse(
+        ai.output_stream(response, output_nodes), media_type="application/x-ndjson"
+    )
 
 
 @app.get("/sources", response_model=List[SourcesGetResponse])

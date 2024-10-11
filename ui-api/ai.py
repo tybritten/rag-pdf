@@ -1,28 +1,25 @@
+import asyncio
 import json
 import os
 import time
+
 import chromadb
-import asyncio
 from fastapi.encoders import jsonable_encoder
-from llama_index.core import Settings, VectorStoreIndex, get_response_synthesizer
+from llama_index.core import (Settings, VectorStoreIndex,
+                              get_response_synthesizer)
 from llama_index.core.postprocessor import SimilarityPostprocessor
 from llama_index.core.query_engine import RetrieverQueryEngine
 from llama_index.core.retrievers import VectorIndexRetriever
-from llama_index.core.vector_stores.types import MetadataFilter, MetadataFilters
+from llama_index.core.vector_stores.types import (MetadataFilter,
+                                                  MetadataFilters)
 from llama_index.embeddings.openai import OpenAIEmbedding
 from llama_index.llms.openai_like import OpenAILike
 from llama_index.vector_stores.chroma import ChromaVectorStore
 from loguru import logger
 from openai import OpenAI
 
-from models import (
-    DefaultConfig,
-    Event,
-    GeneratePostResponse,
-    ReferenceData,
-    ConfigItem,
-    ValueType,
-)
+from models import (ConfigItem, DefaultConfig, Event, GeneratePostResponse,
+                    ReferenceData, ValueType)
 
 
 class AIPipeline:
@@ -40,7 +37,9 @@ class AIPipeline:
         db_path="./db",
     ):
         self.chat_model_url = chat_model_url
-        self.chat_model = chat_model if chat_model else self.get_models()[0]
+        self.chat_model = (
+            chat_model if chat_model else list(self.get_models().keys())[0]
+        )
         self.embed_model = embed_model
         self.similarity_cutoff = similarity_cutoff
         self.top_k = top_k
@@ -103,18 +102,28 @@ class AIPipeline:
         return config
 
     def get_models(self):
-        modelpath = str(self.chat_model_url)
-        client = OpenAI(base_url=modelpath, api_key="fake")
-        models = client.models.list().data
-        available_models = []
-        for model in models:
-            available_models.append(model.id)
+        model_urls = str(self.chat_model_url).split(",")
+        available_models = {}
+        if len(model_urls) >= 1:
+            for url in model_urls:
+                client = OpenAI(base_url=url, api_key="fake")
+                models = client.models.list().data
+                for model in models:
+                    available_models[model.id] = url
+        else:
+            client = OpenAI(base_url=model_urls[0], api_key="fake")
+            models = client.models.list().data
+            for model in models:
+                available_models[model.id] = model_urls[0]
         return available_models
 
-    def load_llm(self):
-        print(Settings.llm)
-        logger.info(f"Using OpenAPI-compatible LLM endpoint: {self.chat_model_url}")
-        modelpath = str(self.chat_model_url)
+    def load_llm(self, url=None):
+        if url is None:
+            modelpath = str(self.chat_model_url.split(",")[0])
+        else:
+            modelpath = url
+        logger.info(f"Using OpenAPI-compatible LLM endpoint: {modelpath}")
+
         llm = OpenAILike(model="", api_base=modelpath, api_key="fake")
         return llm
 
@@ -172,11 +181,10 @@ class AIPipeline:
     def output_stream(self, llm_stream, output_nodes):
         references = self.format_references(output_nodes)
         resp = GeneratePostResponse(event=Event.reference, data=references)
-        yield f'{json.dumps(jsonable_encoder(resp))}\n'
+        yield f"{json.dumps(jsonable_encoder(resp))}\n"
         for chunk in llm_stream:
             stuff = GeneratePostResponse(event=Event.answer, data=chunk.delta)
-            yield f'{json.dumps(jsonable_encoder(stuff))}\n'
-            
+            yield f"{json.dumps(jsonable_encoder(stuff))}\n"
 
     def generate_response(
         self, query, system_prompt, model, model_args, query_engine, streaming=True
@@ -195,16 +203,21 @@ class AIPipeline:
                 else self.max_tokens
             ),
         }
-        llm = self.load_llm()
+        logger.info(f"model sent: {model}")
+        if model:
+            models = self.get_models()
+            llm = self.load_llm(models[model])
+            llm.model = model
+        else:
+            llm = self.load_llm()
+            llm.model = self.chat_model
         logger.info(f"Querying with: {query}")
         output = query_engine.query(query)
-
-        llm.model = model if model else self.chat_model
         context_str = ""
         if not system_prompt:
             system_prompt = self.system_prompt
         for node in output.source_nodes:
-            print(f"Context: {node.metadata}")
+            logger.info(f"Context: {node.metadata}")
             context_str += node.text.replace("\n", "  \n")
         text_qa_template_str_llama3 = f"""
             <|begin_of_text|><|start_header_id|>user<|end_header_id|>
@@ -227,6 +240,7 @@ class AIPipeline:
                 output.source_nodes,
             )
         else:
+            logger.info(f"Requesting model {llm.model} for completion")
             output_response = llm.complete(text_qa_template_str_llama3)
             return output_response, output.source_nodes
 
