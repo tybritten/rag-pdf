@@ -5,6 +5,7 @@ import time
 
 import chromadb
 from fastapi.encoders import jsonable_encoder
+from iso639 import languages
 from llama_index.core import (Settings, VectorStoreIndex,
                               get_response_synthesizer)
 from llama_index.core.postprocessor import SimilarityPostprocessor
@@ -59,13 +60,13 @@ class AIPipeline:
                     maxValue=1.0,
                     valueType=ValueType.FLOAT,
                     defaultValue=self.temp,
-                    description="The randomness of the LLM response higher is more random, lower is more deterministic",
+                    description="The randomness of the LLM response. Higher is more random, lower is more deterministic",
                 ),
                 ConfigItem(
                     name="topK",
                     friendlyName="Top K",
                     minValue=0,
-                    maxValue=100,
+                    maxValue=25,
                     valueType=ValueType.INT,
                     defaultValue=self.top_k,
                     description="The Maximum number of chunks to retreive from the vector DB ",
@@ -86,15 +87,15 @@ class AIPipeline:
                     maxValue=5000,
                     valueType=ValueType.STRING,
                     defaultValue=self.system_prompt,
-                    description="The Instu ",
+                    description="The Instructions for the model ",
                 ),
                 ConfigItem(
                     name="similarityCutoff",
-                    friendlyName="Similarity Cutoff",
-                    minValue=0.0,
-                    maxValue=1.0,
-                    valueType=ValueType.FLOAT,
-                    defaultValue=self.similarity_cutoff,
+                    friendlyName="Similarity Cutoff (%)",
+                    minValue=0,
+                    maxValue=100,
+                    valueType=ValueType.INT,
+                    defaultValue=(self.similarity_cutoff * 100),
                     description="Minimum Similarity Score for retrieved chunks",
                 ),
             ]
@@ -126,6 +127,16 @@ class AIPipeline:
 
         llm = OpenAILike(model="", api_base=modelpath, api_key="fake")
         return llm
+
+    def create_filters(self, tags: list):
+        meta_filters = []
+        for tag in tags:
+            meta_filters.append(MetadataFilter(key="Tag", value=tag))
+        filters = MetadataFilters(
+            filters=meta_filters,
+            condition="or",
+        )
+        return filters
 
     def create_query_engine(self, index, filters=None, cutoff=None, top_k=None):
         if cutoff is None:
@@ -189,21 +200,21 @@ class AIPipeline:
     def generate_response(
         self, query, system_prompt, model, model_args, query_engine, streaming=True
     ):
-
         generate_kwargs = {
             "temperature": (
                 model_args["model_temperature"]
-                if "model_temperature" in model_args
+                if model_args["model_temperature"] is not None
                 else self.temp
             ),
             "top_p": 0.5,
             "max_tokens": (
-                model_args["max_tokens"]
-                if "max_tokens" in model_args
+                model_args["max_output_tokens"]
+                if model_args["max_output_tokens"] is not None
                 else self.max_tokens
             ),
         }
-        logger.info(f"model sent: {model}")
+        logger.info(f"Submitted Args: {model_args}")
+        logger.info(f"Generation Args: {generate_kwargs}")
         if model:
             models = self.get_models()
             llm = self.load_llm(models[model])
@@ -216,6 +227,7 @@ class AIPipeline:
         context_str = ""
         if not system_prompt:
             system_prompt = self.system_prompt
+        logger.info(f"system prompt: {system_prompt}")
         for node in output.source_nodes:
             logger.info(f"Context: {node.metadata}")
             context_str += node.text.replace("\n", "  \n")
@@ -264,8 +276,26 @@ class AIPipeline:
                 out_link = f"{proxy_url}/proxyForward/pfs/{project}/{doc_repo}/{commit}/{title}#page={page}"
             if title.startswith("http"):
                 out_link = title
+            meta = {}
+            if "original" in references[i].node.metadata:
+                original = references[i].node.metadata["original"]
+                if "lang" in references[i].node.metadata:
+                    lang = languages.get(
+                        alpha2=references[i].node.metadata["lang"]
+                    ).name
+                    if lang == "Croatian":
+                        lang = "Serbian"
+                else:
+                    lang = "Unknown"
+                meta["Original Language"] = lang
+                meta["Original Text"] = original
             ref = ReferenceData(
-                source=title, text=text, similarityScore=score, page=page, url=out_link
+                source=title,
+                text=text,
+                similarityScore=score,
+                page=page,
+                url=out_link,
+                metadata=meta,
             )
             refs_to_return.append(ref)
         return refs_to_return

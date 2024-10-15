@@ -5,7 +5,7 @@
 from __future__ import annotations
 
 from enum import Enum
-from typing import Dict, List, Optional, Union
+from typing import Any, Dict, List, Optional, Union
 
 from pydantic import BaseModel
 
@@ -44,7 +44,7 @@ class GeneratePostRequest(BaseModel):
     query: str
     tags: Optional[List[str]] = None
     model: Optional[str] = None
-    config: Optional[Dict[str, Union[int, float, str]]]
+    config: Optional[Dict[str, Union[int, float, str]]] = None
 
 
 class Event(Enum):
@@ -59,6 +59,7 @@ class ReferenceData(BaseModel):
     similarityScore: Optional[float] = None
     page: Optional[int] = None
     url: Optional[str] = None
+    metadata: Optional[Dict[str, Any]] = None
 
 
 class GeneratePostResponse(BaseModel):

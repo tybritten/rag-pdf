@@ -71,29 +71,34 @@ def get_config() -> ConfigGetResponse:
 
 @app.post("/generate", response_model=GeneratePostResponse)
 def post_generate(body: GeneratePostRequest) -> GeneratePostResponse:
-    tags = body.tags if "tags" in body else None
-    if "config" in body:
+    if body.tags:
+        filters = ai.create_filters(body.tags)
+    else:
+        filters = None
+    system_prompt = None
+    if body.config:
         config = body.config
-        cutoff = config.similarityCutoff if "similarityCutoff" in config else None
-        top_k = config.topK if "topK" in config else None
-
-        temp = config.modelTemperature if "modelTemperature" in config else None
-        max_tokens = config.maxOutputTokens if "maxOutputTokens" in config else None
+        cutoff = config["similarityCutoff"] if "similarityCutoff" in config else None
+        cutoff = cutoff / 100 if cutoff > 1.0 else cutoff
+        top_k = config["topK"] if "topK" in config else None
+        temp = config["modelTemperature"] if "modelTemperature" in config else None
+        max_tokens = config["maxOutputTokens"] if "maxOutputTokens" in config else None
+        system_prompt = config["systemPrompt"] if "systemPrompt" in config else None
     else:
         cutoff = None
         top_k = None
         temp = None
         max_tokens = None
     query_engine = ai.create_query_engine(
-        index=index, filters=tags, cutoff=cutoff, top_k=top_k
+        index=index, filters=filters, cutoff=cutoff, top_k=top_k
     )
-    system_prompt = body.systemPrompt if "systemPrompt" in body else SYSTEM_PROMPT
+
     model = body.model
     model_options = {
         "cutoff": cutoff,
         "top_k": top_k,
         "model": model,
-        "tags": tags,
+        "tags": body.tags,
         "model_temperature": temp,
         "max_output_tokens": max_tokens,
     }
