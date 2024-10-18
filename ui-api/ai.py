@@ -265,7 +265,7 @@ class AIPipeline:
         for i in range(len(references)):
             title = references[i].node.metadata["Source"]
             page = references[i].node.metadata["Page Number"]
-            text = references[i].node.text
+            text = references[i].node.text if "text_as_html" not in references[i].node.metadata else references[i].node.metadata["text_as_html"]
             score = round((references[i].score * 100), 3)
             commit = references[i].node.metadata["Commit"]
             doctag = references[i].node.metadata["Tag"]

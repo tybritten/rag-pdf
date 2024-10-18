@@ -7,21 +7,18 @@ args:
   description: The name of the input repo.
   type: string
   default: embed-docs
-- name: embed_model
-  description: The URL to the embedding model (include /v1)
+- name: api_url
+  description: The URL to the API
   type: string
-  default: "http://embed.mlis.svc.cluster.local/v1"
-- name: chat_url
-  description: The URL to the chat model (include /v1)
+  default: "http://document-rag-api-v26-user"
+- name: app_title
+  description: The title of the app
   type: string
-  default: "http://llama3.mlis.svc.cluster.local/v1"
-- name: chat_model
-  description: The model name for chat model (can get from /v1/models)
+  default: "Retrieval Augmented Generation Demo"
+- name: chat_title
+  description: The title of the Chat Interface
   type: string
-  default: "/mnt/models/Meta-Llama-3.1-8B-Instruct/"
-- name: mldm_base_url
-  description: 'The base URL of the MLDM instance.'
-  type: string
+  default: "Chat with your Data"
 - name: service_type
   description: What type of K8s service (LoadBalancer, NodePort, ClusterIP)
   type: string
@@ -32,25 +29,24 @@ args:
   default: "32080"
 */
 
-local chat_cmd(chat_url, chat_model, embed_model) =
-    "streamlit run gui.py -- --path-to-db /pfs/data --path-to-chat-model " + chat_url + " --model " + chat_model +" --emb-model-path " + embed_model + " --cutoff 0.6 --streaming";
 
-function(input_repo="embed-docs", embed_model="http://embed.mlis.svc.cluster.local/v1", chat_url="http://llama3.mlis.svc.cluster.local/v1", chat_model, mldm_base_url="http://localhost:30080", service_type="NodePort", external_port="32080")
+function(chat_title="Chat with your Data", app_title="Retrieval Augmented Generation Demo",input_repo="embed-docs", api_url="http://document-rag-api-v26-user",  service_type="NodePort", external_port="32080")
 {
   "pipeline": {
     "name": "gui",
   },
   "transform": {
-    "image": "vmtyler/pdk:gui-v0.4.2c",
+    "image": "vmtyler/pdk:rag-ui-0.0.5",
     "cmd": [
-      "/bin/bash",
-      "-C"
+      "npm",
+      "run",
+      "prod"
     ],
-    "stdin": [chat_cmd(chat_url, chat_model, embed_model)],
     "env": {
       "PYTHON_UNBUFFERED": "1",
-      "PACH_PROXY_EXTERNAL_URL_BASE": mldm_base_url,
-      "DOCUMENT_REPO": "documents"
+      "VITE_SERVER_ADDRESS": api_url,
+      "VITE_APP_TITLE": app_title,
+      "VITE_CHAT_TITLE": chat_title,
     }
   },
   "input": {
