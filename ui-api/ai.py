@@ -150,10 +150,11 @@ class AIPipeline:
         response_synthesizer = get_response_synthesizer(
             response_mode="no_text", streaming=False
         )
+        logger.info(f"similarity cutoff: {cutoff}")
         query_engine = RetrieverQueryEngine.from_args(
             retriever=retriever,
             response_synthesizer=response_synthesizer,
-            node_postprocessors=[SimilarityPostprocessor(similarity=cutoff)],
+            node_postprocessors=[SimilarityPostprocessor(similarity_cutoff=cutoff)],
         )
         return query_engine
 

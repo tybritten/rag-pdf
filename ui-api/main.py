@@ -78,7 +78,7 @@ def post_generate(body: GeneratePostRequest) -> GeneratePostResponse:
     system_prompt = None
     if body.config:
         config = body.config
-        cutoff = config["similarityCutoff"] if "similarityCutoff" in config else None
+        cutoff = config["similarityCutoff"] if "similarityCutoff" in config else CUTOFF
         cutoff = cutoff / 100 if cutoff > 1.0 else cutoff
         top_k = config["topK"] if "topK" in config else None
         temp = config["modelTemperature"] if "modelTemperature" in config else None
